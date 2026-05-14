@@ -17,7 +17,8 @@ A full-stack relational recruiting CRM. Not an ATS — a CRM. The insight: a job
 ## Tech Stack
 
 - **Frontend:** React + Vite (JSX), single file at `src/App.jsx`
-- **Database:** Supabase (Postgres)
+- **Database:** Supabase (Postgres) with Row Level Security enabled
+- **Auth:** Supabase Auth (magic link), email via Resend (SMTP configured in Supabase dashboard)
 - **Hosting:** Vercel (auto-deploys on push to `main`)
 - **Version control:** GitHub
 
@@ -50,17 +51,17 @@ Modularization is planned before Stage 3 (AI layer). When that happens, each tab
 
 ## Data Model
 
-Five tables in Supabase. Snake_case in DB, camelCase in JS — translated via `toSnake()` / `toCamel()` helpers.
+Five tables in Supabase. Snake_case in DB, camelCase in JS — translated via `toSnake()` / `toCamel()` helpers. All tables have RLS enabled — users only see their own rows.
 
-**companies** — `id, name, vertical, stage, website, notes`
+**companies** — `id, name, vertical, stage, website, notes, user_id`
 
-**jobs** — `id, title, company_id, function, source, status, date_added, jd_link, resume_link, cover_letter_link, notes`
+**jobs** — `id, title, company_id, function, source, status, date_added, jd_link, resume_link, cover_letter_link, notes, user_id`
 
-**contacts** — `id, name, company_id, title, linkedin, email, contact_type (text[]), how_known, connectable_to, notes`
+**contacts** — `id, name, company_id, title, linkedin, email, contact_type (text[]), how_known, connectable_to, notes, user_id`
 
-**outreach** — `id, contact_id, job_id, channel, direction, date, summary, status, draft_ready, notes`
+**outreach** — `id, contact_id, job_id, channel, direction, date, summary, status, draft_ready, notes, user_id`
 
-**action_items** — `id, outreach_id, contact_id, description, priority, effort, done, backlog, due_date`
+**action_items** — `id, outreach_id, contact_id, description, priority, effort, done, backlog, due_date, user_id`
 
 **Key relationships:**
 - Jobs → Companies (many-to-one)
@@ -73,6 +74,8 @@ Five tables in Supabase. Snake_case in DB, camelCase in JS — translated via `t
 - UUID fields must send `null`, not `""`, or Supabase returns a 400
 - Outreach records represent real touchpoints only — no phantom/placeholder entries
 - Pre-outreach leads live as action items on the Contact record, not as outreach entries
+- All inserts must include `user_id` — every tab receives `userId` as a prop from `session.user.id`
+- camelCase mapping (contactId, jobId, draftReady) must be applied at ALL three points: initial load, after insert, after update. Missing any one creates silent display bugs on existing records.
 
 ---
 
@@ -98,15 +101,21 @@ OUTREACH_STATUSES: ["Sent", "Replied", "No Response", "Follow-up Needed"]
 
 **`toCamel(obj)`** — converts snake_case Supabase response to camelCase for React state.
 
-**`dbSave(table, record, setState)`** — upserts a record (insert if id starts with `"new_"`, update otherwise).
+**`dbSave(table, record, setState)`** — upserts a record (insert if id starts with `"new_"`, update otherwise). Stamps `user_id` on inserts via `session` closure.
 
 **`dbDelete(table, id, setState)`** — deletes a record and updates local state.
 
 **`genId()`** — generates a temporary `"new_" + random` id for new records before they're saved.
 
+**`showError(msg)`** — displays a red toast at the bottom of the screen, auto-dismisses after 4 seconds. Passed to all tabs as `onError` prop.
+
 ---
 
 ## Application Structure
+
+**`LoginScreen`** — magic link auth UI. Email input → sends OTP via `supabase.auth.signInWithOtp` → confirmation state. Shown when no session exists.
+
+**`Toast`** — fixed-position error notification, auto-dismisses after 4 seconds.
 
 **`CompaniesTab`** — CRUD for companies
 
@@ -132,11 +141,11 @@ OUTREACH_STATUSES: ["Sent", "Replied", "No Response", "Follow-up Needed"]
 
 ---
 
-## Current Build State (Stage 2 complete)
+## Current Build State (Stage 3 complete)
 
-All five entities fully functional with CRUD, Supabase persistence, and Vercel deployment. Dashboard operational with all sections. Data survives across sessions.
+All five entities fully functional with CRUD, Supabase persistence, and Vercel deployment. Dashboard operational with all sections. Magic link auth live. Per-user data isolation enforced via RLS. Email delivery via Resend on ggrecruit.com domain.
 
-Version badge in header: `v0.2 — stage 2`
+Version badge in header: `v0.2 — stage 2` (not yet updated)
 
 ---
 
@@ -144,9 +153,9 @@ Version badge in header: `v0.2 — stage 2`
 
 - ✅ **Stage 1** — Artifact prototype, data model validation
 - ✅ **Stage 2** — Local dev, GitHub, Supabase, Vercel
-- ⬜ **Pre-Stage 3** — Modularize App.jsx (split tabs into component files)
-- ⬜ **Stage 3** — AI layer: "Draft Message" button on outreach (contact + job + company context → Claude API → draft), follow-up nudge suggestions on dashboard
-- ⬜ **Stage 4** — Auth (user login, RLS policies) — required before Gmail OAuth
+- ✅ **Stage 3** — Auth (magic link), per-user RLS, Resend email delivery
+- ⬜ **Pre-Stage 4** — Modularize App.jsx (split tabs into component files)
+- ⬜ **Stage 4** — AI layer: "Draft Message" button on outreach (contact + job + company context → Claude API → draft), follow-up nudge suggestions on dashboard
 - ⬜ **Stage 5** — Gmail read integration (read-only, human-in-the-loop)
 
 ---
