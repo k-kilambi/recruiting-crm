@@ -205,6 +205,80 @@ git push           ← send to GitHub → triggers Vercel redeploy
 
 ---
 
+## Stage 3 Learnings — Auth, Data Isolation, Error Handling
+
+---
+
+### Insight 17: Snake_case/camelCase mapping must be applied at every data boundary
+
+**The trigger:** A bug where adding a contact to an outreach entry appeared to not save — the contact column always showed "—" and the modal dropdown always showed blank, even when data existed in the database.
+
+**The concept:** Any time data crosses a system boundary (database → JavaScript), a translation layer is needed. The issue was that `action_items` was being mapped correctly (camelCase aliases added on load) but `outreach` was loaded raw. Missing even one translation point creates bugs that only appear in specific UI states — data looks correct in the DB, correct for new records, but wrong for existing records.
+
+**The bug signature:** Data is correct in Supabase, correct when you create a new record, but broken for records loaded from the database. The mismatch only shows up when reading existing state, not writing.
+
+**The fix:** Apply the same camelCase mapping at every entry point — initial load, after insert, and after update. Missing any one of the three creates subtle, hard-to-spot bugs.
+
+---
+
+### Insight 18: Silent failures are a UX bug
+
+**The concept:** When a database operation fails and only `console.error` is called, the user assumes their save worked. They're now operating on stale assumptions. User-visible error feedback is a correctness requirement, not a polish item.
+
+**The pattern used:** A toast notification — fixed position at the bottom of the screen, auto-dismisses after 4 seconds, manual dismiss available. One shared error handler passed down to all tab components so the pattern is consistent.
+
+**The design rule:** If a user action can fail, the user must be told it failed. Silent failures are worse than visible errors because they create false confidence.
+
+---
+
+### Insight 19: Row Level Security — database-enforced access control
+
+**The concept:** RLS policies live in the database, not in your app code. Even if someone bypassed your frontend entirely and queried Supabase directly, they'd still only see their own rows. The policy `auth.uid() = user_id` automatically filters every query to the logged-in user's data.
+
+**The critical gotcha — policies are OR'd together:** Supabase auto-creates permissive "allow all" policies when you enable RLS from the dashboard UI. These override your restrictive policies because multiple policies combine with OR logic. Always verify what policies exist — if there's a permissive one alongside your restrictive one, everyone can see everything.
+
+**The debugging query:**
+```sql
+SELECT tablename, policyname FROM pg_policies WHERE schemaname = 'public';
+```
+If you see two policies per table — one permissive, one restrictive — drop all of them and recreate only the restrictive ones.
+
+---
+
+### Insight 20: Auth method tradeoffs
+
+**Magic link:** No password to manage, link is one-time and expires, natural fit for email-native users (like recruiting). Rate limited on free tiers (~3 emails/hour per project globally — not per address).
+
+**Email + password:** Most familiar UX, Supabase handles forgot-password flows automatically. Requires users to manage credentials.
+
+**Google OAuth:** Best UX (no new account), but requires registering an app in Google Cloud Console. More setup, more moving parts.
+
+**Context matters:** For a recruiting CRM where users live in their inbox all day, magic link is the right fit — checking email isn't friction, it's the workflow.
+
+---
+
+### Insight 21: Email infrastructure — why production apps need a dedicated sender
+
+**The problem with Supabase's built-in sender:** Rate-limited to ~3 emails per hour per project (not per recipient). Can land in spam. Not intended for production use.
+
+**The solution — Resend (or similar):** A dedicated email delivery service. Free tier: 3,000 emails/month. Plugged into Supabase via SMTP settings — no code changes required, just config. Emails come from your own domain (`noreply@yourdomain.com`).
+
+**The requirement:** You need a domain you control to verify with Resend. A Vercel subdomain (`*.vercel.app`) doesn't work because you don't control its DNS. A domain you own and manage is required.
+
+**The flow:** Resend verifies domain ownership via DNS records → you paste SMTP credentials into Supabase → Supabase routes all auth emails through Resend.
+
+---
+
+### Insight 22: Vercel URL configuration gotchas
+
+**Site URL vs. Redirect URLs:** Supabase's Site URL is where magic links redirect by default. If it's set to `localhost`, all magic links from the production app will redirect to localhost. The fix: set Site URL to your production URL, add `localhost:5173` to the Redirect URLs allowlist for local dev.
+
+**Vercel URL collisions:** Vercel project URLs aren't guaranteed to be unique across users. `recruiting-crm.vercel.app` was someone else's app. Always check your actual deployment URL in the Vercel dashboard (`recruiting-crm-zeta.vercel.app` in this case).
+
+**Env vars don't transfer automatically:** `VITE_*` variables in your local `.env` file must be manually added to Vercel → Project Settings → Environment Variables. Forgetting this is why things work locally but fail in production. (Already covered in Insight 13, but worth repeating — it bites everyone at least once.)
+
+---
+
 ## Project Decisions Log
 
 | # | Decision | Rationale | Insight |
@@ -217,6 +291,10 @@ git push           ← send to GitHub → triggers Vercel redeploy
 | 6 | How Known options updated | Old options conflated relationship quality (Warm) with channel (Met in Person). New options are all about relationship nature | — |
 | 7 | Action Items as separate entity linked to Outreach | One touchpoint can generate multiple distinct tasks. Fields on Outreach can only cleanly handle one | Insight 8 |
 | 8 | Action Items support both outreachId and contactId | Pre-outreach leads belong on Contact, not as phantom outreach entries | Insight 9 |
+| 9 | Magic link auth (vs. email+password vs. OAuth) | Email-native users, no password to manage, Supabase handles it natively | Insight 20 |
+| 10 | Open signup with private URL (vs. invite-only) | Invite-only adds ongoing maintenance burden; private URL is effective gatekeeping with zero overhead | — |
+| 11 | Resend for email delivery (vs. Supabase built-in) | Built-in is rate-limited and not production-grade; Resend free tier handles real usage | Insight 21 |
+| 12 | RLS enforced at DB level with user_id on all tables | App-level auth alone is insufficient; DB-level isolation means bypassing the frontend still can't expose other users' data | Insight 19 |
 
 ---
 
@@ -233,7 +311,8 @@ git push           ← send to GitHub → triggers Vercel redeploy
 **The process:**
 - Stage 1: Designed data model from scratch (entities vs. roles, relational linking, query-first design). Built interactive prototype as a React artifact. Validated through real use during MBA internship search.
 - Stage 2: Local dev environment, GitHub, Supabase, Vercel. Data now persists across sessions.
-- Stage 3 (in progress): AI layer — outreach draft generation and follow-up suggestions using Claude API.
+- Stage 3: Multi-user auth with per-user data isolation. Magic link authentication via Supabase Auth, Row Level Security at the database level, Resend for production email delivery. Each user sees only their own data — enforced in the database, not just the UI.
+- Stage 4 (planned): AI layer — outreach draft generation and follow-up suggestions using Claude API.
 
 **Key design decisions documented:**
 - Unified Contact table (entities not roles)
@@ -247,4 +326,4 @@ git push           ← send to GitHub → triggers Vercel redeploy
 ---
 
 *Last updated: May 2026*
-*Next update: After Stage 3 (AI layer) or significant feature additions*
+*Next update: After Stage 4 (AI layer) or significant feature additions*
