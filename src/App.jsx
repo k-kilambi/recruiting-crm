@@ -1,13 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
-// ─── INITIAL SEED DATA ────────────────────────────────────────────────────────
-const SEED = {
-  companies: [],
-  jobs: [],
-  contacts: [],
-  outreach: [],
-  actionItems: [],
-};
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const genId = () => 'new_' + Math.random().toString(36).slice(2, 9);
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const VERTICALS = ["Sports", "Fitness", "Gaming", "Entertainment", "Tech", "Fintech", "Other"];
@@ -37,7 +32,6 @@ const STATUS_COLORS = {
   Resource: "#10b981",
 };
 
-const genId = () => Math.random().toString(36).slice(2, 9);
 
 // ─── SMALL UI COMPONENTS ──────────────────────────────────────────────────────
 const Badge = ({ label, color }) => (
@@ -182,13 +176,26 @@ const Table = ({ cols, rows, onEdit, onDelete }) => (
 // ─── COMPANIES TAB ────────────────────────────────────────────────────────────
 const emptyCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", website: "", notes: "" });
 
-const CompaniesTab = ({ data, setData }) => {
+const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies }) => {
   const [modal, setModal] = useState(null);
-  const save = (rec) => {
-    setData(d => ({ ...d, companies: d.companies.find(c => c.id === rec.id) ? d.companies.map(c => c.id === rec.id ? rec : c) : [...d.companies, rec] }));
+  const save = async (rec) => {
+    const isNew = !rec.id || rec.id.startsWith("new_");
+    const snake = {
+      name: rec.name, vertical: rec.vertical || null,
+      stage: rec.stage || null, website: rec.website || null, notes: rec.notes || null,
+    };
+    if (isNew) {
+      const { data: inserted, error } = await supabase.from("companies").insert(snake).select().single();
+      if (!error && inserted) setCompanies(prev => [inserted, ...prev]);
+      else console.error("Company insert error:", error);
+    } else {
+      const { error } = await supabase.from("companies").update(snake).eq("id", rec.id);
+      if (!error) setCompanies(prev => prev.map(c => c.id === rec.id ? { ...c, ...snake, id: rec.id } : c));
+      else console.error("Company update error:", error);
+    }
     setModal(null);
   };
-  const del = (id) => setData(d => ({ ...d, companies: d.companies.filter(c => c.id !== id) }));
+  const del = (id) => dbDelete("companies", id, setCompanies);
 
   const cols = [
     { key: "name", label: "Company" },
@@ -227,20 +234,36 @@ const emptyJob = () => ({ id: genId(), title: "", companyId: "", function: "", s
 
 const emptyMiniCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", website: "", notes: "" });
 
-const JobsTab = ({ data, setData }) => {
+const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
-  const [miniCompany, setMiniCompany] = useState(null); // inline company creation
+  const [miniCompany, setMiniCompany] = useState(null);
   const [dupWarning, setDupWarning] = useState("");
 
-  const save = (rec) => {
-    setData(d => ({ ...d, jobs: d.jobs.find(j => j.id === rec.id) ? d.jobs.map(j => j.id === rec.id ? rec : j) : [...d.jobs, rec] }));
+  const save = async (rec) => {
+    const isNew = !rec.id || rec.id.startsWith("new_");
+    const snake = {
+      title: rec.title, company_id: rec.companyId || null,
+      function: rec.function || null, source: rec.source || null,
+      status: rec.status, date_added: rec.dateAdded || null,
+      jd_link: rec.jdLink || null, resume_link: rec.resumeLink || null,
+      cover_letter_link: rec.coverLetterLink || null, notes: rec.notes || null,
+    };
+    if (isNew) {
+      const { data: inserted, error } = await supabase.from("jobs").insert(snake).select().single();
+      if (!error && inserted) setJobs(prev => [inserted, ...prev]);
+      else console.error("Job insert error:", error);
+    } else {
+      const { error } = await supabase.from("jobs").update(snake).eq("id", rec.id);
+      if (!error) setJobs(prev => prev.map(j => j.id === rec.id ? { ...j, ...snake, id: rec.id } : j));
+      else console.error("Job update error:", error);
+    }
     setModal(null);
   };
-  const del = (id) => setData(d => ({ ...d, jobs: d.jobs.filter(j => j.id !== id) }));
+  const del = (id) => dbDelete("jobs", id, setJobs);
   const coName = (id) => data.companies.find(c => c.id === id)?.name || "—";
 
-  const saveMiniCompany = (co) => {
+  const saveMiniCompany = async (co) => {
     const dup = data.companies.find(c => c.name.toLowerCase().trim() === co.name.toLowerCase().trim());
     if (dup) {
       setDupWarning(`"${dup.name}" already exists. Selecting it instead.`);
@@ -248,8 +271,11 @@ const JobsTab = ({ data, setData }) => {
       setMiniCompany(null);
       return;
     }
-    setData(d => ({ ...d, companies: [...d.companies, co] }));
-    setModal(m => ({ ...m, companyId: co.id }));
+    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage }).select().single();
+    if (inserted) {
+      setCompanies(prev => [inserted, ...prev]);
+      setModal(m => ({ ...m, companyId: inserted.id }));
+    }
     setMiniCompany(null);
     setDupWarning("");
   };
@@ -369,7 +395,7 @@ const MultiSelect = ({ label, value = [], onChange, options }) => {
   );
 };
 
-const ContactsTab = ({ data, setData }) => {
+const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanies, setActionItems }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniCompany, setMiniCompany] = useState(null);
@@ -378,15 +404,43 @@ const ContactsTab = ({ data, setData }) => {
   const [pendingContactActions, setPendingContactActions] = useState([]);
   const [showContactActions, setShowContactActions] = useState(false);
 
-  const save = (rec) => {
-    setData(d => {
-      const updatedContacts = d.contacts.find(c => c.id === rec.id)
-        ? d.contacts.map(c => c.id === rec.id ? rec : c)
-        : [...d.contacts, rec];
-      const newActions = pendingContactActions.map(a => ({ ...a, contactId: rec.id, outreachId: null }));
-      const existingActions = (d.actionItems || []).filter(a => a.contactId !== rec.id);
-      return { ...d, contacts: updatedContacts, actionItems: [...existingActions, ...newActions] };
-    });
+  const save = async (rec) => {
+    const isNew = !rec.id || rec.id.startsWith("new_");
+    const snake = {
+      name: rec.name, company_id: rec.companyId || null, title: rec.title || null,
+      linkedin: rec.linkedin || null, email: rec.email || null,
+      contact_type: rec.contactType || [], how_known: rec.howKnown || null,
+      connectable_to: rec.connectableTo || null, notes: rec.notes || null,
+    };
+    let savedId = rec.id;
+    if (isNew) {
+      const { data: inserted, error } = await supabase.from("contacts").insert(snake).select().single();
+      if (!error && inserted) {
+        setContacts(prev => [inserted, ...prev]);
+        savedId = inserted.id;
+      } else { console.error("Contact insert error:", error); return; }
+    } else {
+      const { error } = await supabase.from("contacts").update(snake).eq("id", rec.id);
+      if (!error) setContacts(prev => prev.map(c => c.id === rec.id ? { ...c, ...snake, id: rec.id } : c));
+      else { console.error("Contact update error:", error); return; }
+    }
+    // save action items
+    for (const ai of pendingContactActions) {
+      if (ai.description && ai.description.trim()) {
+        const aiSnake = {
+          contact_id: savedId, outreach_id: null,
+          description: ai.description, priority: ai.priority,
+          effort: ai.effort, done: ai.done || false, backlog: ai.backlog || false,
+          due_date: ai.dueDate || null,
+        };
+        if (ai.id && !ai.id.startsWith("new_")) {
+          await supabase.from("action_items").update(aiSnake).eq("id", ai.id);
+        } else {
+          const { data: newAi } = await supabase.from("action_items").insert(aiSnake).select().single();
+          if (newAi) setActionItems(prev => [...prev, { ...newAi, contactId: newAi.contact_id, outreachId: newAi.outreach_id }]);
+        }
+      }
+    }
     setModal(null);
     setPendingContactActions([]);
     setShowContactActions(false);
@@ -399,11 +453,11 @@ const ContactsTab = ({ data, setData }) => {
     setPendingContactActions(existing.length > 0 ? existing : []);
     setShowContactActions(existing.length > 0);
   };
-  const del = (id) => setData(d => ({ ...d, contacts: d.contacts.filter(c => c.id !== id) }));
+  const del = (id) => dbDelete('contacts', id, setContacts);
   const coName = (id) => data.companies.find(c => c.id === id)?.name || "—";
   const ctName = (id) => data.contacts.find(c => c.id === id)?.name || "—";
 
-  const saveMiniCompany = (co) => {
+  const saveMiniCompany = async (co) => {
     const dup = data.companies.find(c => c.name.toLowerCase().trim() === co.name.toLowerCase().trim());
     if (dup) {
       setDupWarning(`"${dup.name}" already exists. Selecting it instead.`);
@@ -411,8 +465,11 @@ const ContactsTab = ({ data, setData }) => {
       setMiniCompany(null);
       return;
     }
-    setData(d => ({ ...d, companies: [...d.companies, co] }));
-    setModal(m => ({ ...m, companyId: co.id }));
+    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage }).select().single();
+    if (inserted) {
+      setCompanies(prev => [inserted, ...prev]);
+      setModal(m => ({ ...m, companyId: inserted.id }));
+    }
     setMiniCompany(null);
     setDupWarning("");
   };
@@ -586,7 +643,7 @@ const EFFORTS = ["L", "M", "H"];
 const PRIORITY_COLORS = { L: "#475569", M: "#f59e0b", H: "#ef4444" };
 const EFFORT_COLORS = { L: "#10b981", M: "#f59e0b", H: "#ef4444" };
 
-const OutreachTab = ({ data, setData }) => {
+const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniContact, setMiniContact] = useState(null);
@@ -596,16 +653,43 @@ const OutreachTab = ({ data, setData }) => {
   const [showActions, setShowActions] = useState(false);
   const [pendingActions, setPendingActions] = useState([]);
 
-  const save = (rec) => {
-    setData(d => {
-      const updatedOutreach = d.outreach.find(o => o.id === rec.id)
-        ? d.outreach.map(o => o.id === rec.id ? rec : o)
-        : [...d.outreach, rec];
-      // merge pending action items
-      const newActions = pendingActions.map(a => ({ ...a, outreachId: rec.id }));
-      const existingActions = d.actionItems.filter(a => a.outreachId !== rec.id);
-      return { ...d, outreach: updatedOutreach, actionItems: [...existingActions, ...newActions] };
-    });
+  const save = async (rec) => {
+    const isNew = !rec.id || rec.id.startsWith("new_");
+    const snake = {
+      contact_id: rec.contactId || null, job_id: rec.jobId || null,
+      channel: rec.channel, direction: rec.direction,
+      date: rec.date || null, summary: rec.summary || null,
+      status: rec.status, draft_ready: rec.draftReady || false,
+      notes: rec.notes || null,
+    };
+    let savedId = rec.id;
+    if (isNew) {
+      const { data: inserted, error } = await supabase.from("outreach").insert(snake).select().single();
+      if (!error && inserted) {
+        setOutreach(prev => [inserted, ...prev]);
+        savedId = inserted.id;
+      } else { console.error("Outreach insert error:", error); return; }
+    } else {
+      const { error } = await supabase.from("outreach").update(snake).eq("id", rec.id);
+      if (!error) setOutreach(prev => prev.map(o => o.id === rec.id ? { ...o, ...snake, id: rec.id } : o));
+      else { console.error("Outreach update error:", error); return; }
+    }
+    for (const ai of pendingActions) {
+      if (ai.description && ai.description.trim()) {
+        const aiSnake = {
+          outreach_id: savedId, contact_id: null,
+          description: ai.description, priority: ai.priority,
+          effort: ai.effort, done: ai.done || false, backlog: ai.backlog || false,
+          due_date: ai.dueDate || null,
+        };
+        if (ai.id && !ai.id.startsWith("new_")) {
+          await supabase.from("action_items").update(aiSnake).eq("id", ai.id);
+        } else {
+          const { data: newAi } = await supabase.from("action_items").insert(aiSnake).select().single();
+          if (newAi) setActionItems(prev => [...prev, { ...newAi, contactId: newAi.contact_id, outreachId: newAi.outreach_id }]);
+        }
+      }
+    }
     setModal(null);
     setPendingActions([]);
     setShowActions(false);
@@ -615,13 +699,15 @@ const OutreachTab = ({ data, setData }) => {
     setModal(rec);
     setDupWarning("");
     setShowActions(false);
-    // load existing action items for this record
     const existing = (data.actionItems || []).filter(a => a.outreachId === rec.id);
     setPendingActions(existing.length > 0 ? existing : []);
     if (existing.length > 0) setShowActions(true);
   };
 
-  const del = (id) => setData(d => ({ ...d, outreach: d.outreach.filter(o => o.id !== id), actionItems: (d.actionItems || []).filter(a => a.outreachId !== id) }));
+  const del = async (id) => {
+    await supabase.from("action_items").delete().eq("outreach_id", id);
+    dbDelete("outreach", id, setOutreach);
+  };
   const ctName = (id) => data.contacts.find(c => c.id === id)?.name || "—";
   const jobTitle = (id) => {
     const j = data.jobs.find(j => j.id === id);
@@ -631,7 +717,7 @@ const OutreachTab = ({ data, setData }) => {
   };
   const actionCount = (outreachId) => (data.actionItems || []).filter(a => a.outreachId === outreachId && !a.done).length;
 
-  const saveMiniContact = (ct) => {
+  const saveMiniContact = async (ct) => {
     const dup = data.contacts.find(c => c.name.toLowerCase().trim() === ct.name.toLowerCase().trim());
     if (dup) {
       setDupWarning(`"${dup.name}" already exists. Selecting them instead.`);
@@ -639,13 +725,16 @@ const OutreachTab = ({ data, setData }) => {
       setMiniContact(null);
       return;
     }
-    setData(d => ({ ...d, contacts: [...d.contacts, ct] }));
-    setModal(m => ({ ...m, contactId: ct.id }));
+    const { data: inserted } = await supabase.from("contacts").insert({ name: ct.name, company_id: ct.companyId || null, title: ct.title, contact_type: [], how_known: "Cold" }).select().single();
+    if (inserted) {
+      setContacts(prev => [inserted, ...prev]);
+      setModal(m => ({ ...m, contactId: inserted.id }));
+    }
     setMiniContact(null);
     setDupWarning("");
   };
 
-  const saveMiniCompanyFromContact = (co) => {
+  const saveMiniCompanyFromContact = async (co) => {
     const dup = data.companies.find(c => c.name.toLowerCase().trim() === co.name.toLowerCase().trim());
     if (dup) {
       setDupCompanyWarning(`"${dup.name}" already exists. Selecting it instead.`);
@@ -653,8 +742,11 @@ const OutreachTab = ({ data, setData }) => {
       setMiniCompanyFromContact(null);
       return;
     }
-    setData(d => ({ ...d, companies: [...d.companies, co] }));
-    setMiniContact(m => ({ ...m, companyId: co.id }));
+    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage }).select().single();
+    if (inserted) {
+      setContacts(prev => prev);
+      setMiniContact(m => ({ ...m, companyId: inserted.id }));
+    }
     setMiniCompanyFromContact(null);
     setDupCompanyWarning("");
   };
@@ -902,7 +994,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
           {highPriorityActions.map(a => (
             <div key={a.id} style={{ background: "#0a1628", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                <input type="checkbox" checked={a.done} onChange={() => setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) }))}
+                <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
                   style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ color: "#e2e8f0", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
@@ -930,7 +1022,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
             return (
               <div key={a.id} style={{ background: "#0a1628", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                  <input type="checkbox" checked={a.done} onChange={() => setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) }))}
+                  <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
                     style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ color: "#e2e8f0", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
@@ -942,7 +1034,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
                 <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
                   <span style={{ fontSize: "10px", color: PRIORITY_COLORS[a.priority] || "#475569", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
                   <span style={{ fontSize: "10px", color: EFFORT_COLORS[a.effort] || "#475569", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
-                  <button onClick={() => setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) }))}
+                  <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
                     title="Move to backlog" style={{ background: "transparent", border: "1px solid #1e293b", color: "#334155", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
                 </div>
               </div>
@@ -957,7 +1049,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
           {openActions.filter(a => a.priority !== "H").map(a => (
             <div key={a.id} style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                <input type="checkbox" checked={a.done} onChange={() => setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) }))}
+                <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
                   style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ color: "#94a3b8", fontSize: "13px" }}>{a.description}</div>
@@ -970,7 +1062,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
               <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
                 <span style={{ fontSize: "10px", color: a.priority === "M" ? "#f59e0b" : "#475569", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
                 <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#f59e0b" : "#10b981", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
-                <button onClick={() => setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) }))}
+                <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
                   title="Move to backlog" style={{ background: "transparent", border: "1px solid #1e293b", color: "#334155", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
               </div>
             </div>
@@ -1030,7 +1122,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
                 <div style={{ color: "#475569", fontSize: "13px" }}>{a.description}</div>
                 <div style={{ color: "#334155", fontSize: "11px", marginTop: "2px" }}>re: {data.contacts.find(c => c.id === (data.outreach.find(o => o.id === a.outreachId)?.contactId))?.name || "—"}</div>
               </div>
-              <button onClick={() => setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: false } : x) }))}
+              <button onClick={async () => { await supabase.from("action_items").update({ backlog: false }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: false } : x) })); }}
                 style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>restore</button>
             </div>
           ))}
@@ -1062,47 +1154,151 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [data, setData] = useState(SEED);
-  const [tab, setTab] = useState("dashboard");
-  const [importVal, setImportVal] = useState("");
-  const [showImport, setShowImport] = useState(false);
+  // ── Data state ──────────────────────────────────────────────────────────────
+  const [companies, setCompanies] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [outreach, setOutreach] = useState([]);
+  const [actionItems, setActionItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dashboard contextual modals — open records in-place without leaving dashboard
+  // ── UI state ─────────────────────────────────────────────────────────────────
+  const [tab, setTab] = useState("dashboard");
+  const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importVal, setImportVal] = useState("");
   const [dashOutreachModal, setDashOutreachModal] = useState(null);
   const [dashJobModal, setDashJobModal] = useState(null);
   const [dashOutreachActions, setDashOutreachActions] = useState([]);
   const [dashShowActions, setDashShowActions] = useState(false);
 
+  // ── Build data object for child components ───────────────────────────────────
+  const data = { companies, jobs, contacts, outreach, actionItems };
+  const setData = (updater) => {
+    const updated = typeof updater === "function" ? updater(data) : updater;
+    if (updated.companies !== companies) setCompanies(updated.companies);
+    if (updated.jobs !== jobs) setJobs(updated.jobs);
+    if (updated.contacts !== contacts) setContacts(updated.contacts);
+    if (updated.outreach !== outreach) setOutreach(updated.outreach);
+    if (updated.actionItems !== actionItems) setActionItems(updated.actionItems);
+  };
+
+  // ── Fetch all data on load ────────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchAll = async () => {
+      setLoading(true);
+      const [co, jo, ct, ou, ai] = await Promise.all([
+        supabase.from("companies").select("*").order("created_at", { ascending: false }),
+        supabase.from("jobs").select("*").order("created_at", { ascending: false }),
+        supabase.from("contacts").select("*").order("created_at", { ascending: false }),
+        supabase.from("outreach").select("*").order("date", { ascending: false }),
+        supabase.from("action_items").select("*").order("created_at", { ascending: false }),
+      ]);
+      setCompanies(co.data || []);
+      setJobs(jo.data || []);
+      setContacts(ct.data || []);
+      setOutreach(ou.data || []);
+      setActionItems((ai.data || []).map(a => ({
+        ...a,
+        outreachId: a.outreach_id,
+        contactId: a.contact_id,
+        dueDate: a.due_date,
+      })));
+      setLoading(false);
+    };
+    fetchAll();
+  }, []);
+
+  // ── Supabase helpers ──────────────────────────────────────────────────────────
+  const toSnake = (obj) => {
+    const map = {
+      companyId: "company_id", jobId: "job_id", contactId: "contact_id",
+      outreachId: "outreach_id", dateAdded: "date_added", jdLink: "jd_link",
+      resumeLink: "resume_link", coverLetterLink: "cover_letter_link",
+      contactType: "contact_type", howKnown: "how_known", connectableTo: "connectable_to",
+      draftReady: "draft_ready", dueDate: "due_date",
+    };
+    // UUID fields that must be null not empty string
+    const uuidFields = ["company_id", "job_id", "contact_id", "outreach_id", "connectable_to"];
+    const result = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (k === "id" || k === "created_at") continue;
+      const snakeKey = map[k] || k;
+      // coerce empty strings to null for UUID fields
+      let val = v;
+      if (uuidFields.includes(snakeKey) && (v === "" || v === undefined)) val = null;
+      // coerce empty strings to null for date fields
+      if ((snakeKey === "date_added" || snakeKey === "due_date") && (v === "" || v === undefined)) val = null;
+      result[snakeKey] = val;
+    }
+    return result;
+  };
+
+  const toCamel = (obj) => {
+    const map = {
+      company_id: "companyId", job_id: "jobId", contact_id: "contactId",
+      outreach_id: "outreachId", date_added: "dateAdded", jd_link: "jdLink",
+      resume_link: "resumeLink", cover_letter_link: "coverLetterLink",
+      contact_type: "contactType", how_known: "howKnown", connectable_to: "connectableTo",
+      draft_ready: "draftReady", due_date: "dueDate",
+    };
+    const result = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[map[k] || k] = v;
+    }
+    return result;
+  };
+
+  const dbSave = async (table, record, setState) => {
+    const snake = toSnake(record);
+    if (record.id && !record.id.startsWith("new_")) {
+      const { data: updated, error } = await supabase.from(table).update(snake).eq("id", record.id).select().single();
+      if (!error) setState(prev => prev.map(r => r.id === record.id ? toCamel(updated) : r));
+    } else {
+      const { data: inserted, error } = await supabase.from(table).insert(snake).select().single();
+      if (!error) setState(prev => [toCamel(inserted), ...prev]);
+    }
+  };
+
+  const dbDelete = async (table, id, setState) => {
+    await supabase.from(table).delete().eq("id", id);
+    setState(prev => prev.filter(r => r.id !== id));
+  };
+
+  // ── Dashboard handlers ────────────────────────────────────────────────────────
   const openDashOutreach = (rec) => {
     setDashOutreachModal(rec);
-    const existing = (data.actionItems || []).filter(a => a.outreachId === rec.id);
+    const existing = actionItems.filter(a => a.outreachId === rec.id);
     setDashOutreachActions(existing);
     setDashShowActions(existing.length > 0);
   };
 
-  const saveDashOutreach = (rec) => {
-    setData(d => {
-      const updatedOutreach = d.outreach.map(o => o.id === rec.id ? rec : o);
-      const existingActions = d.actionItems.filter(a => a.outreachId !== rec.id);
-      const newActions = dashOutreachActions.map(a => ({ ...a, outreachId: rec.id }));
-      return { ...d, outreach: updatedOutreach, actionItems: [...existingActions, ...newActions] };
-    });
+  const saveDashOutreach = async (rec) => {
+    await dbSave("outreach", rec, setOutreach);
+    for (const ai of dashOutreachActions) {
+      const aiRecord = { ...ai, outreachId: rec.id };
+      await dbSave("action_items", aiRecord, setActionItems);
+    }
     setDashOutreachModal(null);
   };
 
-  const saveDashJob = (rec) => {
-    setData(d => ({ ...d, jobs: d.jobs.map(j => j.id === rec.id ? rec : j) }));
+  const saveDashJob = async (rec) => {
+    await dbSave("jobs", rec, setJobs);
     setDashJobModal(null);
   };
 
-  const [showExport, setShowExport] = useState(false);
+  // ── Export / Import ───────────────────────────────────────────────────────────
   const exportData = () => setShowExport(true);
   const exportJson = JSON.stringify(data, null, 2);
 
   const importData = () => {
     try {
       const parsed = JSON.parse(importVal);
-      setData(parsed);
+      if (parsed.companies) setCompanies(parsed.companies);
+      if (parsed.jobs) setJobs(parsed.jobs);
+      if (parsed.contacts) setContacts(parsed.contacts);
+      if (parsed.outreach) setOutreach(parsed.outreach);
+      if (parsed.actionItems) setActionItems(parsed.actionItems);
       setShowImport(false);
       setImportVal("");
     } catch { alert("Invalid JSON — check your data and try again"); }
@@ -1116,7 +1312,26 @@ export default function App() {
     { id: "outreach", label: "Outreach", color: "#8b5cf6" },
   ];
 
-  const coName = id => data.companies.find(c => c.id === id)?.name || "";
+  const coName = id => companies.find(c => c.id === id)?.name || "";
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ color: "#475569", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading your CRM...</div>
+    </div>
+  );
+
+  // ── Supabase-aware setData for child components ───────────────────────────────
+  const supabaseSetData = (updater) => {
+    const current = { companies, jobs, contacts, outreach, actionItems };
+    const updated = typeof updater === "function" ? updater(current) : updater;
+    if (updated.companies !== current.companies) setCompanies(updated.companies);
+    if (updated.jobs !== current.jobs) setJobs(updated.jobs);
+    if (updated.contacts !== current.contacts) setContacts(updated.contacts);
+    if (updated.outreach !== current.outreach) setOutreach(updated.outreach);
+    if (updated.actionItems !== current.actionItems) setActionItems(updated.actionItems);
+  };
+
+  const dbProps = { dbSave, dbDelete, setCompanies, setJobs, setContacts, setOutreach, setActionItems };
 
   return (
     <div style={{
@@ -1133,7 +1348,7 @@ export default function App() {
             <span style={{ color: "#000", fontSize: "14px", fontWeight: 800 }}>R</span>
           </div>
           <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "#e2e8f0", letterSpacing: "0.02em" }}>recruiting.crm</span>
-          <span style={{ fontSize: "10px", color: "#1e293b", background: "#0f172a", border: "1px solid #1e293b", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.1 — stage 1</span>
+          <span style={{ fontSize: "10px", color: "#1e293b", background: "#0f172a", border: "1px solid #1e293b", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
@@ -1158,11 +1373,11 @@ export default function App() {
 
       {/* Content */}
       <div style={{ padding: "28px", maxWidth: "1100px" }}>
-        {tab === "dashboard" && <DashboardTab data={data} setData={setData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
-        {tab === "companies" && <CompaniesTab data={data} setData={setData} />}
-        {tab === "jobs" && <JobsTab data={data} setData={setData} />}
-        {tab === "contacts" && <ContactsTab data={data} setData={setData} />}
-        {tab === "outreach" && <OutreachTab data={data} setData={setData} />}
+        {tab === "dashboard" && <DashboardTab data={data} setData={supabaseSetData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
+        {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} />}
+        {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} />}
+        {tab === "contacts" && <ContactsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setContacts={setContacts} setCompanies={setCompanies} setActionItems={setActionItems} />}
+        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setActionItems={setActionItems} />}
       </div>
 
       {/* Dashboard Outreach Modal */}
@@ -1177,10 +1392,8 @@ export default function App() {
           <Input label="Date" value={dashOutreachModal.date} onChange={v => setDashOutreachModal(m => ({ ...m, date: v }))} type="date" />
           <Input label="Subject / Summary" value={dashOutreachModal.summary} onChange={v => setDashOutreachModal(m => ({ ...m, summary: v }))} />
           <Textarea label="Notes" value={dashOutreachModal.notes} onChange={v => setDashOutreachModal(m => ({ ...m, notes: v }))} />
-
-          {/* Action items inline */}
           <div style={{ borderTop: "1px solid #1e293b", marginTop: "16px", paddingTop: "14px" }}>
-            <button onClick={() => { setDashShowActions(s => !s); if (!dashShowActions && dashOutreachActions.length === 0) setDashOutreachActions([emptyActionItem(dashOutreachModal.id)]); }}
+            <button onClick={() => { setDashShowActions(s => !s); if (!dashShowActions && dashOutreachActions.length === 0) setDashOutreachActions([{ id: "new_" + Math.random().toString(36).slice(2), outreachId: dashOutreachModal.id, description: "", priority: "M", effort: "M", done: false, backlog: false, dueDate: "" }]); }}
               style={{ background: "transparent", border: "none", color: dashShowActions ? "#f59e0b" : "#334155", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ fontSize: "14px" }}>{dashShowActions ? "▾" : "▸"}</span>
               ACTION ITEMS {dashOutreachActions.filter(a => !a.done).length > 0 && <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433", borderRadius: "4px", padding: "1px 6px", fontSize: "10px" }}>{dashOutreachActions.filter(a => !a.done).length} open</span>}
@@ -1189,44 +1402,11 @@ export default function App() {
               <div style={{ marginTop: "12px" }}>
                 {dashOutreachActions.map((ai, i) => (
                   <div key={ai.id} style={{ background: "#060d18", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <input type="checkbox" checked={ai.done} onChange={e => setDashOutreachActions(prev => prev.map((a, j) => j === i ? { ...a, done: e.target.checked } : a))}
-                          style={{ accentColor: "#10b981", width: "14px", height: "14px" }} />
-                        <span style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase" }}>Action {i + 1}</span>
-                      </div>
-                      <button onClick={() => setDashOutreachActions(prev => prev.filter((_, j) => j !== i))}
-                        style={{ background: "none", border: "none", color: "#334155", cursor: "pointer", fontSize: "14px" }}>×</button>
-                    </div>
                     <input value={ai.description} onChange={e => setDashOutreachActions(prev => prev.map((a, j) => j === i ? { ...a, description: e.target.value } : a))}
                       placeholder="What needs to be done..."
-                      style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none", marginBottom: "8px" }} />
-                    <div style={{ display: "flex", gap: "12px" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", marginBottom: "5px" }}>Priority</div>
-                        <div style={{ display: "flex", gap: "5px" }}>
-                          {PRIORITIES.map(p => (
-                            <button key={p} onClick={() => setDashOutreachActions(prev => prev.map((a, j) => j === i ? { ...a, priority: p } : a))}
-                              style={{ flex: 1, background: ai.priority === p ? PRIORITY_COLORS[p] + "22" : "transparent", border: `1px solid ${ai.priority === p ? PRIORITY_COLORS[p] : "#1e293b"}`, color: ai.priority === p ? PRIORITY_COLORS[p] : "#475569", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{p}</button>
-                          ))}
-                        </div>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", marginBottom: "5px" }}>Effort</div>
-                        <div style={{ display: "flex", gap: "5px" }}>
-                          {EFFORTS.map(e => (
-                            <button key={e} onClick={() => setDashOutreachActions(prev => prev.map((a, j) => j === i ? { ...a, effort: e } : a))}
-                              style={{ flex: 1, background: ai.effort === e ? EFFORT_COLORS[e] + "22" : "transparent", border: `1px solid ${ai.effort === e ? EFFORT_COLORS[e] : "#1e293b"}`, color: ai.effort === e ? EFFORT_COLORS[e] : "#475569", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{e}</button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                      style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none" }} />
                   </div>
                 ))}
-                <button onClick={() => setDashOutreachActions(prev => [...prev, emptyActionItem(dashOutreachModal.id)])}
-                  style={{ width: "100%", background: "transparent", border: "1px dashed #1e293b", color: "#334155", borderRadius: "6px", padding: "8px", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
-                  + Add Action Item
-                </button>
               </div>
             )}
           </div>
@@ -1242,9 +1422,9 @@ export default function App() {
           </div>
           <Input label="Job Title" value={dashJobModal.title} onChange={v => setDashJobModal(m => ({ ...m, title: v }))} />
           <Select label="Status" value={dashJobModal.status} onChange={v => setDashJobModal(m => ({ ...m, status: v }))} options={JOB_STATUSES} />
-          <Input label="Resume (Google Drive URL)" value={dashJobModal.resumeLink} onChange={v => setDashJobModal(m => ({ ...m, resumeLink: v }))} placeholder="https://drive.google.com/..." />
-          <Input label="Cover Letter (Google Drive URL)" value={dashJobModal.coverLetterLink} onChange={v => setDashJobModal(m => ({ ...m, coverLetterLink: v }))} placeholder="https://drive.google.com/..." />
-          <Textarea label="Notes" value={dashJobModal.notes} onChange={v => setDashJobModal(m => ({ ...m, notes: v }))} />
+          <Input label="Resume (Google Drive URL)" value={dashJobModal.resumeLink || ""} onChange={v => setDashJobModal(m => ({ ...m, resumeLink: v }))} placeholder="https://drive.google.com/..." />
+          <Input label="Cover Letter (Google Drive URL)" value={dashJobModal.coverLetterLink || ""} onChange={v => setDashJobModal(m => ({ ...m, coverLetterLink: v }))} placeholder="https://drive.google.com/..." />
+          <Textarea label="Notes" value={dashJobModal.notes || ""} onChange={v => setDashJobModal(m => ({ ...m, notes: v }))} />
           <button onClick={() => saveDashJob(dashJobModal)} style={{ width: "100%", background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
         </Modal>
       )}
@@ -1252,16 +1432,11 @@ export default function App() {
       {/* Export Modal */}
       {showExport && (
         <Modal title="Export Data" onClose={() => setShowExport(false)}>
-          <p style={{ color: "#475569", fontSize: "13px", marginTop: 0 }}>Copy everything below and save it to a text file (.json). Use Import to reload it next session.</p>
-          <textarea
-            readOnly
-            value={exportJson}
-            rows={12}
-            onFocus={e => e.target.select()}
-            style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#94a3b8", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical", cursor: "text" }}
-          />
+          <p style={{ color: "#475569", fontSize: "13px", marginTop: 0 }}>Copy everything below and save it to a text file. Use Import to reload it next session.</p>
+          <textarea readOnly value={exportJson} rows={12} onFocus={e => e.target.select()}
+            style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#94a3b8", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical", cursor: "text" }} />
           <div style={{ marginTop: "12px", background: "#f59e0b22", border: "1px solid #f59e0b44", borderRadius: "6px", padding: "10px 14px", fontSize: "12px", color: "#f59e0b", textAlign: "center", fontWeight: 600 }}>
-            ☝ Click the text above — it selects automatically. Then hit Ctrl+C (or Cmd+C on Mac) to copy.
+            ☝ Click the text above — it selects automatically. Then hit Ctrl+C to copy.
           </div>
         </Modal>
       )}
@@ -1270,13 +1445,9 @@ export default function App() {
       {showImport && (
         <Modal title="Import Data" onClose={() => setShowImport(false)}>
           <p style={{ color: "#475569", fontSize: "13px", marginTop: 0 }}>Paste your previously exported JSON below to restore your data.</p>
-          <textarea
-            value={importVal}
-            onChange={e => setImportVal(e.target.value)}
-            rows={10}
+          <textarea value={importVal} onChange={e => setImportVal(e.target.value)} rows={10}
             placeholder='{"companies": [...], "jobs": [...], ...}'
-            style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical" }}
-          />
+            style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical" }} />
           <button onClick={importData} style={{ width: "100%", background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "12px" }}>LOAD DATA</button>
         </Modal>
       )}
