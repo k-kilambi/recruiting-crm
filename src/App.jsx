@@ -192,7 +192,7 @@ const Table = ({ cols, rows, onEdit, onDelete }) => (
 // ─── COMPANIES TAB ────────────────────────────────────────────────────────────
 const emptyCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", website: "", notes: "" });
 
-const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError }) => {
+const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, userId }) => {
   const [modal, setModal] = useState(null);
   const save = async (rec) => {
     const isNew = !rec.id || rec.id.startsWith("new_");
@@ -201,7 +201,7 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError }
       stage: rec.stage || null, website: rec.website || null, notes: rec.notes || null,
     };
     if (isNew) {
-      const { data: inserted, error } = await supabase.from("companies").insert(snake).select().single();
+      const { data: inserted, error } = await supabase.from("companies").insert({ ...snake, user_id: userId }).select().single();
       if (!error && inserted) setCompanies(prev => [inserted, ...prev]);
       else { console.error("Company insert error:", error); onError("Failed to save company — please try again."); }
     } else {
@@ -250,7 +250,7 @@ const emptyJob = () => ({ id: genId(), title: "", companyId: "", function: "", s
 
 const emptyMiniCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", website: "", notes: "" });
 
-const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onError }) => {
+const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onError, userId }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniCompany, setMiniCompany] = useState(null);
@@ -266,7 +266,7 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
       cover_letter_link: rec.coverLetterLink || null, notes: rec.notes || null,
     };
     if (isNew) {
-      const { data: inserted, error } = await supabase.from("jobs").insert(snake).select().single();
+      const { data: inserted, error } = await supabase.from("jobs").insert({ ...snake, user_id: userId }).select().single();
       if (!error && inserted) setJobs(prev => [inserted, ...prev]);
       else { console.error("Job insert error:", error); onError("Failed to save job — please try again."); }
     } else {
@@ -287,7 +287,7 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
       setMiniCompany(null);
       return;
     }
-    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage }).select().single();
+    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage, user_id: userId }).select().single();
     if (inserted) {
       setCompanies(prev => [inserted, ...prev]);
       setModal(m => ({ ...m, companyId: inserted.id }));
@@ -411,7 +411,7 @@ const MultiSelect = ({ label, value = [], onChange, options }) => {
   );
 };
 
-const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanies, setActionItems, onError }) => {
+const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanies, setActionItems, onError, userId }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniCompany, setMiniCompany] = useState(null);
@@ -430,7 +430,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
     };
     let savedId = rec.id;
     if (isNew) {
-      const { data: inserted, error } = await supabase.from("contacts").insert(snake).select().single();
+      const { data: inserted, error } = await supabase.from("contacts").insert({ ...snake, user_id: userId }).select().single();
       if (!error && inserted) {
         setContacts(prev => [inserted, ...prev]);
         savedId = inserted.id;
@@ -452,7 +452,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
         if (ai.id && !ai.id.startsWith("new_")) {
           await supabase.from("action_items").update(aiSnake).eq("id", ai.id);
         } else {
-          const { data: newAi } = await supabase.from("action_items").insert(aiSnake).select().single();
+          const { data: newAi } = await supabase.from("action_items").insert({ ...aiSnake, user_id: userId }).select().single();
           if (newAi) setActionItems(prev => [...prev, { ...newAi, contactId: newAi.contact_id, outreachId: newAi.outreach_id }]);
         }
       }
@@ -481,7 +481,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
       setMiniCompany(null);
       return;
     }
-    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage }).select().single();
+    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage, user_id: userId }).select().single();
     if (inserted) {
       setCompanies(prev => [inserted, ...prev]);
       setModal(m => ({ ...m, companyId: inserted.id }));
@@ -659,7 +659,7 @@ const EFFORTS = ["L", "M", "H"];
 const PRIORITY_COLORS = { L: "#475569", M: "#f59e0b", H: "#ef4444" };
 const EFFORT_COLORS = { L: "#10b981", M: "#f59e0b", H: "#ef4444" };
 
-const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems, onError }) => {
+const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems, onError, userId }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniContact, setMiniContact] = useState(null);
@@ -680,7 +680,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
     };
     let savedId = rec.id;
     if (isNew) {
-      const { data: inserted, error } = await supabase.from("outreach").insert(snake).select().single();
+      const { data: inserted, error } = await supabase.from("outreach").insert({ ...snake, user_id: userId }).select().single();
       if (!error && inserted) {
         setOutreach(prev => [{ ...inserted, contactId: inserted.contact_id, jobId: inserted.job_id, draftReady: inserted.draft_ready }, ...prev]);
         savedId = inserted.id;
@@ -701,7 +701,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
         if (ai.id && !ai.id.startsWith("new_")) {
           await supabase.from("action_items").update(aiSnake).eq("id", ai.id);
         } else {
-          const { data: newAi } = await supabase.from("action_items").insert(aiSnake).select().single();
+          const { data: newAi } = await supabase.from("action_items").insert({ ...aiSnake, user_id: userId }).select().single();
           if (newAi) setActionItems(prev => [...prev, { ...newAi, contactId: newAi.contact_id, outreachId: newAi.outreach_id }]);
         }
       }
@@ -741,7 +741,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       setMiniContact(null);
       return;
     }
-    const { data: inserted } = await supabase.from("contacts").insert({ name: ct.name, company_id: ct.companyId || null, title: ct.title, contact_type: [], how_known: "Cold" }).select().single();
+    const { data: inserted } = await supabase.from("contacts").insert({ name: ct.name, company_id: ct.companyId || null, title: ct.title, contact_type: [], how_known: "Cold", user_id: userId }).select().single();
     if (inserted) {
       setContacts(prev => [inserted, ...prev]);
       setModal(m => ({ ...m, contactId: inserted.id }));
@@ -758,7 +758,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       setMiniCompanyFromContact(null);
       return;
     }
-    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage }).select().single();
+    const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage, user_id: userId }).select().single();
     if (inserted) {
       setContacts(prev => prev);
       setMiniContact(m => ({ ...m, companyId: inserted.id }));
@@ -1168,8 +1168,81 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
   );
 };
 
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+const LoginScreen = () => {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const sendLink = async () => {
+    if (!email.trim()) return;
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setLoading(false);
+    if (error) setError("Couldn't send link — check the email and try again.");
+    else setSent(true);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+      <div style={{ width: "100%", maxWidth: "380px", padding: "0 24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "36px" }}>
+          <div style={{ width: "28px", height: "28px", background: "#f59e0b", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "#000", fontSize: "14px", fontWeight: 800 }}>R</span>
+          </div>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "#e2e8f0" }}>recruiting.crm</span>
+        </div>
+        {sent ? (
+          <div style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "10px", padding: "28px", textAlign: "center" }}>
+            <div style={{ fontSize: "32px", marginBottom: "14px" }}>📬</div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Check your email</div>
+            <div style={{ fontSize: "13px", color: "#475569", lineHeight: 1.6 }}>We sent a magic link to <span style={{ color: "#e2e8f0" }}>{email}</span>. Click it to sign in.</div>
+          </div>
+        ) : (
+          <div style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "10px", padding: "28px" }}>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: "#f1f5f9", marginBottom: "20px" }}>Sign in</div>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Email</label>
+            <input
+              type="email" value={email} onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && sendLink()}
+              placeholder="you@example.com"
+              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "10px 12px", fontSize: "14px", outline: "none", marginBottom: "14px" }}
+            />
+            {error && <div style={{ fontSize: "12px", color: "#ef4444", marginBottom: "12px" }}>{error}</div>}
+            <button onClick={sendLink} disabled={loading}
+              style={{ width: "100%", background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "11px", fontWeight: 700, fontSize: "13px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}>
+              {loading ? "Sending…" : "Send magic link"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
+  // ── Auth state ───────────────────────────────────────────────────────────────
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   // ── Data state ──────────────────────────────────────────────────────────────
   const [companies, setCompanies] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -1201,8 +1274,9 @@ export default function App() {
     if (updated.actionItems !== actionItems) setActionItems(updated.actionItems);
   };
 
-  // ── Fetch all data on load ────────────────────────────────────────────────────
+  // ── Fetch all data once authenticated ────────────────────────────────────────
   useEffect(() => {
+    if (!session) return;
     const fetchAll = async () => {
       setLoading(true);
       const [co, jo, ct, ou, ai] = await Promise.all([
@@ -1225,7 +1299,7 @@ export default function App() {
       setLoading(false);
     };
     fetchAll();
-  }, []);
+  }, [session?.user?.id]);
 
   // ── Supabase helpers ──────────────────────────────────────────────────────────
   const toSnake = (obj) => {
@@ -1274,7 +1348,7 @@ export default function App() {
       if (!error) setState(prev => prev.map(r => r.id === record.id ? toCamel(updated) : r));
       else { console.error(`${table} update error:`, error); showError("Failed to save — please try again."); }
     } else {
-      const { data: inserted, error } = await supabase.from(table).insert(snake).select().single();
+      const { data: inserted, error } = await supabase.from(table).insert({ ...snake, user_id: session?.user?.id }).select().single();
       if (!error) setState(prev => [toCamel(inserted), ...prev]);
       else { console.error(`${table} insert error:`, error); showError("Failed to save — please try again."); }
     }
@@ -1334,6 +1408,14 @@ export default function App() {
 
   const coName = id => companies.find(c => c.id === id)?.name || "";
 
+  if (authLoading) return (
+    <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ color: "#475569", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading...</div>
+    </div>
+  );
+
+  if (!session) return <LoginScreen />;
+
   if (loading) return (
     <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
       <div style={{ color: "#475569", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading your CRM...</div>
@@ -1373,6 +1455,7 @@ export default function App() {
         <div style={{ display: "flex", gap: "8px" }}>
           <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
           <button onClick={exportData} style={{ background: "transparent", border: "1px solid #f59e0b55", color: "#f59e0b", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
+          <button onClick={() => supabase.auth.signOut()} style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>SIGN OUT</button>
         </div>
       </div>
 
@@ -1394,10 +1477,10 @@ export default function App() {
       {/* Content */}
       <div style={{ padding: "28px", maxWidth: "1100px" }}>
         {tab === "dashboard" && <DashboardTab data={data} setData={supabaseSetData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
-        {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} />}
-        {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} />}
-        {tab === "contacts" && <ContactsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setContacts={setContacts} setCompanies={setCompanies} setActionItems={setActionItems} onError={showError} />}
-        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setActionItems={setActionItems} onError={showError} />}
+        {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
+        {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
+        {tab === "contacts" && <ContactsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setContacts={setContacts} setCompanies={setCompanies} setActionItems={setActionItems} onError={showError} userId={session.user.id} />}
+        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setActionItems={setActionItems} onError={showError} userId={session.user.id} />}
       </div>
 
       {/* Dashboard Outreach Modal */}
