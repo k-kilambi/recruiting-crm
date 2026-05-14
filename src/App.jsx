@@ -994,10 +994,6 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
       <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9", marginBottom: "24px" }}>Overview</div>
 
       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
-        <StatCard label="Companies" value={data.companies.length} />
-        <StatCard label="Jobs Tracked" value={data.jobs.length} />
-        <StatCard label="Contacts" value={data.contacts.length} />
-        <StatCard label="Touchpoints" value={data.outreach.length} />
         <StatCard label="Interviewing" value={interviewing.length} color="#f59e0b" />
         <StatCard label="Follow-ups Due" value={followUps.length} color="#ef4444" />
         <StatCard label="Open Actions" value={openActions.length} color={openActions.length > 0 ? "#ef4444" : "#f1f5f9"} />
