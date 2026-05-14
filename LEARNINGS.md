@@ -279,6 +279,41 @@ If you see two policies per table — one permissive, one restrictive — drop a
 
 ---
 
+## Stage 4 Pre-Work Learnings — Data Migration, Theming
+
+---
+
+### Insight 23: Migrating relational data into Supabase via SQL
+
+**The trigger:** Needed to import old CRM data (from the Stage 1 prototype) into Supabase. The data had its own short IDs and inter-table relationships — contacts referenced companies, outreach referenced contacts, etc.
+
+**The concept:** Supabase uses UUIDs as primary keys (auto-generated). You can't just insert rows with the old short IDs — you need to insert parent records first, capture the new UUIDs, then use them when inserting child records. SQL's `DO $$` anonymous block with `DECLARING` variables and `RETURNING id INTO variable` handles this cleanly.
+
+**The pattern:**
+```sql
+DO $$
+DECLARE
+  uid UUID;
+  company_tiktok UUID;
+  contact_bendes UUID;
+BEGIN
+  SELECT id INTO uid FROM auth.users WHERE email = 'you@example.com';
+
+  INSERT INTO companies (name, user_id)
+    VALUES ('TikTok', uid)
+    RETURNING id INTO company_tiktok;
+
+  INSERT INTO contacts (name, company_id, user_id)
+    VALUES ('David Bendes', company_tiktok, uid);
+END $$;
+```
+
+Run this in Supabase SQL Editor — it runs as postgres superuser, bypasses RLS, no auth required.
+
+**The UUID gotcha:** Any column that's a UUID type must receive `NULL`, not `''`, if it has no value. The app's `toSnake()` helper handles this automatically, but raw SQL doesn't — you'll get `invalid input syntax for type uuid: ""` if you pass an empty string. In this project: `connectable_to` on contacts is a UUID column that trips this.
+
+---
+
 ## Project Decisions Log
 
 | # | Decision | Rationale | Insight |

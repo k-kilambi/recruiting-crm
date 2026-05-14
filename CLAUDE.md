@@ -40,12 +40,13 @@ Vercel redeploys in ~6 seconds.
 
 ```
 src/
-  App.jsx        ← entire application (~1350 lines, single file for now)
+  App.jsx        ← entire application (~1560 lines, single file for now)
+  index.css      ← CSS custom property token system for light/dark theming
   supabase.js    ← Supabase client init
 .env             ← gitignored, never push
 ```
 
-Modularization is planned before Stage 3 (AI layer). When that happens, each tab component moves to its own file under `src/components/`.
+Modularization is still planned (was deferred from Stage 3). When it happens, each tab component moves to its own file under `src/components/`.
 
 ---
 
@@ -57,7 +58,7 @@ Five tables in Supabase. Snake_case in DB, camelCase in JS — translated via `t
 
 **jobs** — `id, title, company_id, function, source, status, date_added, jd_link, resume_link, cover_letter_link, notes, user_id`
 
-**contacts** — `id, name, company_id, title, linkedin, email, contact_type (text[]), how_known, connectable_to, notes, user_id`
+**contacts** — `id, name, company_id, title, linkedin, email, contact_type (text[]), how_known, connectable_to (UUID, nullable), notes, user_id`
 
 **outreach** — `id, contact_id, job_id, channel, direction, date, summary, status, draft_ready, notes, user_id`
 
@@ -125,13 +126,14 @@ OUTREACH_STATUSES: ["Sent", "Replied", "No Response", "Follow-up Needed"]
 
 **`OutreachTab`** — CRUD for outreach (event log), inline contact creation (3 levels deep: outreach → contact → company), action items with progressive disclosure
 
-**`DashboardTab`** — command center; sections: High Priority Actions, Other Open Actions, Contact Actions, Follow-ups Needed, Active Interviews, No Response, Backlog (collapsed). Smart suppression: Follow-up Needed rows hidden when open action items exist for that outreach. Click any item to open edit modal in-place.
+**`DashboardTab`** — command center; 4 stat cards (Interviewing, Follow-ups Due, Open Actions, Contact Actions — pipeline size cards removed), then sections: High Priority Actions, Contact Actions, Other Open Actions, Follow-ups Needed, Active Interviews, Backlog (collapsed), No Response. Smart suppression: Follow-up Needed rows hidden when open action items exist for that outreach. Click any item to open edit modal in-place.
 
 ---
 
 ## UI Conventions
 
-- **Dark theme:** background `#060d18`, primary accent amber `#f59e0b`
+- **Theming:** CSS custom properties in `index.css` for light/dark auto-switching (respects OS preference). Tokens: `--bg`, `--surface`, `--surface-raised`, `--border`, `--border-subtle`, `--text-primary`, `--text-secondary`, `--text-tertiary`, `--input-bg`, `--modal-bg`, `--overlay`, `--stripe`. All structural colors in `App.jsx` reference these via `var(--token)` in inline styles.
+- **Accent:** amber `#f59e0b` (CTA buttons, active states). Dark warm off-black / light warm white as base.
 - **Tab colors:** Dashboard = amber, Companies/Jobs/Contacts = blue, Outreach = purple. Muted when inactive, full when active.
 - **Progressive disclosure:** action items hidden behind collapsible toggle in modals. Count badge in table rows when open items exist.
 - **Inline creation:** Job → create Company mid-flow. Contact → create Company mid-flow. Outreach → create Contact mid-flow → create Company mid-flow (3 levels).

@@ -22,10 +22,10 @@ const STATUS_COLORS = {
   Interviewing: "#f59e0b",
   Offer: "#10b981",
   Rejected: "#ef4444",
-  Withdrew: "#6b7280",
+  Withdrew: "#71717a",
   Sent: "#3b82f6",
   Replied: "#10b981",
-  "No Response": "#6b7280",
+  "No Response": "#71717a",
   "Follow-up Needed": "#ef4444",
   Target: "#f59e0b",
   Bridge: "#8b5cf6",
@@ -43,15 +43,15 @@ const Badge = ({ label, color }) => (
     fontWeight: 600,
     letterSpacing: "0.04em",
     textTransform: "uppercase",
-    background: (color || STATUS_COLORS[label] || "#6b7280") + "22",
+    background: (color || STATUS_COLORS[label] || "var(--text-secondary)") + "22",
     color: color || STATUS_COLORS[label] || "#9ca3af",
-    border: `1px solid ${(color || STATUS_COLORS[label] || "#6b7280")}44`,
+    border: `1px solid ${(color || STATUS_COLORS[label] || "var(--text-secondary)")}44`,
   }}>{label}</span>
 );
 
 const Input = ({ label, value, onChange, type = "text", placeholder = "" }) => (
   <div style={{ marginBottom: "14px" }}>
-    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
+    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
     <input
       type={type}
       value={value}
@@ -59,8 +59,8 @@ const Input = ({ label, value, onChange, type = "text", placeholder = "" }) => (
       placeholder={placeholder}
       style={{
         width: "100%", boxSizing: "border-box",
-        background: "#0f172a", border: "1px solid #1e293b",
-        color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px",
+        background: "var(--input-bg)", border: "1px solid var(--border)",
+        color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px",
         fontSize: "13px", outline: "none",
       }}
     />
@@ -69,14 +69,14 @@ const Input = ({ label, value, onChange, type = "text", placeholder = "" }) => (
 
 const Select = ({ label, value, onChange, options }) => (
   <div style={{ marginBottom: "14px" }}>
-    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
+    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
       style={{
         width: "100%", boxSizing: "border-box",
-        background: "#0f172a", border: "1px solid #1e293b",
-        color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px",
+        background: "var(--input-bg)", border: "1px solid var(--border)",
+        color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px",
         fontSize: "13px", outline: "none",
       }}
     >
@@ -90,21 +90,21 @@ const Checkbox = ({ label, value, onChange }) => (
   <div style={{ marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
     <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)}
       style={{ width: "15px", height: "15px", accentColor: "#f59e0b" }} />
-    <label style={{ fontSize: "13px", color: "#94a3b8" }}>{label}</label>
+    <label style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{label}</label>
   </div>
 );
 
 const Textarea = ({ label, value, onChange }) => (
   <div style={{ marginBottom: "14px" }}>
-    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
+    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
     <textarea
       value={value}
       onChange={e => onChange(e.target.value)}
       rows={3}
       style={{
         width: "100%", boxSizing: "border-box",
-        background: "#0f172a", border: "1px solid #1e293b",
-        color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px",
+        background: "var(--input-bg)", border: "1px solid var(--border)",
+        color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px",
         fontSize: "13px", outline: "none", resize: "vertical",
       }}
     />
@@ -114,17 +114,17 @@ const Textarea = ({ label, value, onChange }) => (
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
   <div onClick={onClose} style={{
-    position: "fixed", inset: 0, background: "#00000088", zIndex: 100,
+    position: "fixed", inset: 0, background: "var(--overlay)", zIndex: 100,
     display: "flex", alignItems: "center", justifyContent: "center",
   }}>
     <div onClick={e => e.stopPropagation()} style={{
-      background: "#0d1b2a", border: "1px solid #1e293b", borderRadius: "12px",
+      background: "var(--modal-bg)", border: "1px solid var(--border)", borderRadius: "12px",
       width: "480px", maxHeight: "85vh", overflow: "auto", padding: "28px",
       boxShadow: "0 25px 60px #000a",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px" }}>
-        <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#f1f5f9", fontFamily: "'DM Mono', monospace" }}>{title}</h2>
-        <button onClick={onClose} style={{ background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "20px", lineHeight: 1 }}>×</button>
+        <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "'DM Mono', monospace" }}>{title}</h2>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "20px", lineHeight: 1 }}>×</button>
       </div>
       {children}
     </div>
@@ -156,30 +156,30 @@ const Table = ({ cols, rows, onEdit, onDelete }) => (
           {cols.map(c => (
             <th key={c.key} style={{
               textAlign: "left", padding: "10px 14px",
-              borderBottom: "1px solid #1e293b",
-              color: "#475569", fontSize: "11px", fontWeight: 600,
+              borderBottom: "1px solid var(--border)",
+              color: "var(--text-tertiary)", fontSize: "11px", fontWeight: 600,
               letterSpacing: "0.06em", textTransform: "uppercase",
               fontFamily: "'DM Mono', monospace",
             }}>{c.label}</th>
           ))}
-          <th style={{ width: "80px", borderBottom: "1px solid #1e293b" }} />
+          <th style={{ width: "80px", borderBottom: "1px solid var(--border)" }} />
         </tr>
       </thead>
       <tbody>
         {rows.length === 0 && (
-          <tr><td colSpan={cols.length + 1} style={{ padding: "32px", textAlign: "center", color: "#334155", fontSize: "13px" }}>No records yet — add one above</td></tr>
+          <tr><td colSpan={cols.length + 1} style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No records yet — add one above</td></tr>
         )}
         {rows.map((row, i) => (
-          <tr key={row.id} style={{ background: i % 2 === 0 ? "transparent" : "#0a1628" }}>
+          <tr key={row.id} style={{ background: i % 2 === 0 ? "transparent" : "var(--stripe)" }}>
             {cols.map(c => (
-              <td key={c.key} style={{ padding: "10px 14px", color: "#94a3b8", borderBottom: "1px solid #0f172a", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {c.render ? c.render(row[c.key], row) : row[c.key] || <span style={{ color: "#334155" }}>—</span>}
+              <td key={c.key} style={{ padding: "10px 14px", color: "var(--text-secondary)", borderBottom: "1px solid var(--border-subtle)", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {c.render ? c.render(row[c.key], row) : row[c.key] || <span style={{ color: "var(--text-tertiary)" }}>—</span>}
               </td>
             ))}
-            <td style={{ padding: "10px 14px", borderBottom: "1px solid #0f172a" }}>
+            <td style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
               <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid #1e293b", color: "#64748b", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Edit</button>
-                <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid #1e293b", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Del</button>
+                <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Edit</button>
+                <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid var(--border)", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Del</button>
               </div>
             </td>
           </tr>
@@ -225,8 +225,8 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <div>
-          <div style={{ fontSize: "11px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Companies</div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9" }}>{data.companies.length} tracked</div>
+          <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Companies</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.companies.length} tracked</div>
         </div>
         <button onClick={() => setModal(emptyCompany())} style={{ background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>+ ADD COMPANY</button>
       </div>
@@ -299,21 +299,21 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
   const filtered = filter === "All" ? data.jobs : data.jobs.filter(j => j.status === filter);
 
   const cols = [
-    { key: "title", label: "Role", render: (v) => <span style={{ color: "#e2e8f0", fontWeight: 500 }}>{v}</span> },
+    { key: "title", label: "Role", render: (v) => <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{v}</span> },
     { key: "companyId", label: "Company", render: v => coName(v) },
     { key: "function", label: "Function" },
     { key: "status", label: "Status", render: v => <Badge label={v} /> },
     { key: "dateAdded", label: "Added" },
-    { key: "resumeLink", label: "Resume", render: v => v ? <a href={v} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", fontSize: "11px" }}>↗ link</a> : <span style={{ color: "#334155" }}>—</span> },
-    { key: "coverLetterLink", label: "CL", render: v => v ? <a href={v} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", fontSize: "11px" }}>↗ link</a> : <span style={{ color: "#334155" }}>—</span> },
+    { key: "resumeLink", label: "Resume", render: v => v ? <a href={v} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", fontSize: "11px" }}>↗ link</a> : <span style={{ color: "var(--text-tertiary)" }}>—</span> },
+    { key: "coverLetterLink", label: "CL", render: v => v ? <a href={v} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", fontSize: "11px" }}>↗ link</a> : <span style={{ color: "var(--text-tertiary)" }}>—</span> },
   ];
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <div>
-          <div style={{ fontSize: "11px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Jobs</div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9" }}>{data.jobs.length} tracked</div>
+          <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Jobs</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.jobs.length} tracked</div>
         </div>
         <button onClick={() => { setModal(emptyJob()); setDupWarning(""); }} style={{ background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD JOB</button>
       </div>
@@ -321,8 +321,8 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
         {["All", ...JOB_STATUSES].map(s => (
           <button key={s} onClick={() => setFilter(s)} style={{
             background: filter === s ? "#f59e0b22" : "transparent",
-            border: `1px solid ${filter === s ? "#f59e0b" : "#1e293b"}`,
-            color: filter === s ? "#f59e0b" : "#475569",
+            border: `1px solid ${filter === s ? "#f59e0b" : "var(--border)"}`,
+            color: filter === s ? "#f59e0b" : "var(--text-tertiary)",
             borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
             fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em",
           }}>{s}</button>
@@ -337,14 +337,14 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
 
           {/* Company selector with inline add */}
           <div style={{ marginBottom: "14px" }}>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company</label>
             <select value={modal.companyId} onChange={e => setModal(m => ({ ...m, companyId: e.target.value }))}
-              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
               <option value="">— select company —</option>
               {data.companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <button onClick={() => setMiniCompany(emptyMiniCompany())}
-              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "#475569", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
+              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "var(--text-tertiary)", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
               + Add New Company
             </button>
             {dupWarning && <div style={{ marginTop: "6px", fontSize: "11px", color: "#f59e0b" }}>⚠ {dupWarning}</div>}
@@ -365,13 +365,13 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
       {/* Mini Company Modal */}
       {miniCompany && (
         <Modal title="Quick Add Company" onClose={() => setMiniCompany(null)}>
-          <p style={{ color: "#475569", fontSize: "12px", marginTop: 0 }}>Add the basics now — you can fill in the rest from the Companies tab later.</p>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "12px", marginTop: 0 }}>Add the basics now — you can fill in the rest from the Companies tab later.</p>
           <Input label="Company Name *" value={miniCompany.name} onChange={v => setMiniCompany(m => ({ ...m, name: v }))} />
           <Select label="Vertical" value={miniCompany.vertical} onChange={v => setMiniCompany(m => ({ ...m, vertical: v }))} options={VERTICALS} />
           <Select label="Stage" value={miniCompany.stage} onChange={v => setMiniCompany(m => ({ ...m, stage: v }))} options={STAGES} />
           <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
             <button onClick={() => setMiniCompany(null)}
-              style={{ flex: 1, background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+              style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
               Cancel
             </button>
             <button onClick={() => { if (miniCompany.name.trim()) saveMiniCompany(miniCompany); }}
@@ -395,13 +395,13 @@ const MultiSelect = ({ label, value = [], onChange, options }) => {
   };
   return (
     <div style={{ marginBottom: "14px" }}>
-      <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>{label}</label>
+      <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>{label}</label>
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
         {options.map(opt => (
           <button key={opt} onClick={() => toggle(opt)} style={{
             background: value.includes(opt) ? (STATUS_COLORS[opt] || "#f59e0b") + "22" : "transparent",
-            border: `1px solid ${value.includes(opt) ? (STATUS_COLORS[opt] || "#f59e0b") : "#1e293b"}`,
-            color: value.includes(opt) ? (STATUS_COLORS[opt] || "#f59e0b") : "#475569",
+            border: `1px solid ${value.includes(opt) ? (STATUS_COLORS[opt] || "#f59e0b") : "var(--border)"}`,
+            color: value.includes(opt) ? (STATUS_COLORS[opt] || "#f59e0b") : "var(--text-tertiary)",
             borderRadius: "5px", padding: "5px 12px", fontSize: "12px",
             fontWeight: 600, cursor: "pointer", letterSpacing: "0.03em",
           }}>{opt}</button>
@@ -495,7 +495,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
     : data.contacts.filter(c => Array.isArray(c.contactType) ? c.contactType.includes(filter) : c.contactType === filter);
 
   const cols = [
-    { key: "name", label: "Name", render: v => <span style={{ color: "#e2e8f0", fontWeight: 500 }}>{v}</span> },
+    { key: "name", label: "Name", render: v => <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{v}</span> },
     { key: "companyId", label: "Company", render: v => coName(v) },
     { key: "title", label: "Title" },
     { key: "contactType", label: "Type", render: v => {
@@ -514,8 +514,8 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <div>
-          <div style={{ fontSize: "11px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Contacts</div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9" }}>{data.contacts.length} tracked</div>
+          <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Contacts</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.contacts.length} tracked</div>
         </div>
         <button onClick={() => { setModal(emptyContact()); setDupWarning(""); }} style={{ background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD CONTACT</button>
       </div>
@@ -523,8 +523,8 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
         {["All", ...CONTACT_TYPES].map(s => (
           <button key={s} onClick={() => setFilter(s)} style={{
             background: filter === s ? "#f59e0b22" : "transparent",
-            border: `1px solid ${filter === s ? "#f59e0b" : "#1e293b"}`,
-            color: filter === s ? "#f59e0b" : "#475569",
+            border: `1px solid ${filter === s ? "#f59e0b" : "var(--border)"}`,
+            color: filter === s ? "#f59e0b" : "var(--text-tertiary)",
             borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
             fontWeight: 600, cursor: "pointer",
           }}>{s}</button>
@@ -539,14 +539,14 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
 
           {/* Inline company creation */}
           <div style={{ marginBottom: "14px" }}>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company</label>
             <select value={modal.companyId} onChange={e => setModal(m => ({ ...m, companyId: e.target.value }))}
-              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
               <option value="">— select company —</option>
               {data.companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <button onClick={() => setMiniCompany(emptyMiniCompany())}
-              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "#475569", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
+              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "var(--text-tertiary)", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
               + Add New Company
             </button>
             {dupWarning && <div style={{ marginTop: "6px", fontSize: "11px", color: "#f59e0b" }}>⚠ {dupWarning}</div>}
@@ -557,9 +557,9 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
           <Select label="How You Know Them" value={modal.howKnown} onChange={v => setModal(m => ({ ...m, howKnown: v }))} options={HOW_KNOWN} />
           {showConnectable && (
             <div style={{ marginBottom: "14px" }}>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Can Connect You To</label>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Can Connect You To</label>
               <select value={modal.connectableTo} onChange={e => setModal(m => ({ ...m, connectableTo: e.target.value }))}
-                style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+                style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
                 <option value="">— select contact —</option>
                 {data.contacts.filter(c => c.id !== modal.id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -570,45 +570,45 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
           <Textarea label="Notes" value={modal.notes} onChange={v => setModal(m => ({ ...m, notes: v }))} />
 
           {/* Action items on contact — for pre-outreach leads */}
-          <div style={{ borderTop: "1px solid #1e293b", marginTop: "16px", paddingTop: "14px" }}>
+          <div style={{ borderTop: "1px solid var(--border)", marginTop: "16px", paddingTop: "14px" }}>
             <button onClick={() => { setShowContactActions(s => !s); if (!showContactActions && pendingContactActions.length === 0) setPendingContactActions([emptyActionItem(null, modal.id)]); }}
-              style={{ background: "transparent", border: "none", color: showContactActions ? "#f59e0b" : "#334155", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+              style={{ background: "transparent", border: "none", color: showContactActions ? "#f59e0b" : "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ fontSize: "14px" }}>{showContactActions ? "▾" : "▸"}</span>
               ACTION ITEMS {pendingContactActions.length > 0 && <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433", borderRadius: "4px", padding: "1px 6px", fontSize: "10px" }}>{pendingContactActions.filter(a => !a.done).length} open</span>}
             </button>
-            <div style={{ fontSize: "10px", color: "#334155", marginTop: "3px", marginLeft: "20px" }}>Relationship actions not tied to a specific outreach — surfaces on dashboard as Contact Actions</div>
+            <div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginTop: "3px", marginLeft: "20px" }}>Relationship actions not tied to a specific outreach — surfaces on dashboard as Contact Actions</div>
             {showContactActions && (
               <div style={{ marginTop: "12px" }}>
                 {pendingContactActions.map((ai, i) => (
-                  <div key={ai.id} style={{ background: "#060d18", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
+                  <div key={ai.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <input type="checkbox" checked={ai.done} onChange={e => setPendingContactActions(prev => prev.map((a, j) => j === i ? { ...a, done: e.target.checked } : a))}
                           style={{ accentColor: "#10b981", width: "14px", height: "14px" }} />
-                        <span style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase" }}>Action {i + 1}</span>
+                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase" }}>Action {i + 1}</span>
                       </div>
                       <button onClick={() => setPendingContactActions(prev => prev.filter((_, j) => j !== i))}
-                        style={{ background: "none", border: "none", color: "#334155", cursor: "pointer", fontSize: "14px" }}>×</button>
+                        style={{ background: "none", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "14px" }}>×</button>
                     </div>
                     <input value={ai.description} onChange={e => setPendingContactActions(prev => prev.map((a, j) => j === i ? { ...a, description: e.target.value } : a))}
                       placeholder="e.g. Reach out to intro yourself..."
-                      style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none", marginBottom: "8px" }} />
+                      style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none", marginBottom: "8px" }} />
                     <div style={{ display: "flex", gap: "12px" }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", marginBottom: "5px" }}>Priority</div>
+                        <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "5px" }}>Priority</div>
                         <div style={{ display: "flex", gap: "5px" }}>
                           {PRIORITIES.map(p => (
                             <button key={p} onClick={() => setPendingContactActions(prev => prev.map((a, j) => j === i ? { ...a, priority: p } : a))}
-                              style={{ flex: 1, background: ai.priority === p ? PRIORITY_COLORS[p] + "22" : "transparent", border: `1px solid ${ai.priority === p ? PRIORITY_COLORS[p] : "#1e293b"}`, color: ai.priority === p ? PRIORITY_COLORS[p] : "#475569", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{p}</button>
+                              style={{ flex: 1, background: ai.priority === p ? PRIORITY_COLORS[p] + "22" : "transparent", border: `1px solid ${ai.priority === p ? PRIORITY_COLORS[p] : "var(--border)"}`, color: ai.priority === p ? PRIORITY_COLORS[p] : "var(--text-tertiary)", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{p}</button>
                           ))}
                         </div>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", marginBottom: "5px" }}>Effort</div>
+                        <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", marginBottom: "5px" }}>Effort</div>
                         <div style={{ display: "flex", gap: "5px" }}>
                           {EFFORTS.map(e => (
                             <button key={e} onClick={() => setPendingContactActions(prev => prev.map((a, j) => j === i ? { ...a, effort: e } : a))}
-                              style={{ flex: 1, background: ai.effort === e ? EFFORT_COLORS[e] + "22" : "transparent", border: `1px solid ${ai.effort === e ? EFFORT_COLORS[e] : "#1e293b"}`, color: ai.effort === e ? EFFORT_COLORS[e] : "#475569", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{e}</button>
+                              style={{ flex: 1, background: ai.effort === e ? EFFORT_COLORS[e] + "22" : "transparent", border: `1px solid ${ai.effort === e ? EFFORT_COLORS[e] : "var(--border)"}`, color: ai.effort === e ? EFFORT_COLORS[e] : "var(--text-tertiary)", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{e}</button>
                           ))}
                         </div>
                       </div>
@@ -616,7 +616,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
                   </div>
                 ))}
                 <button onClick={() => setPendingContactActions(prev => [...prev, emptyActionItem(null, modal.id)])}
-                  style={{ width: "100%", background: "transparent", border: "1px dashed #1e293b", color: "#334155", borderRadius: "6px", padding: "8px", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
+                  style={{ width: "100%", background: "transparent", border: "1px dashed var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "8px", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}>
                   + Add Another Action Item
                 </button>
               </div>
@@ -630,13 +630,13 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
       {/* Mini Company Modal */}
       {miniCompany && (
         <Modal title="Quick Add Company" onClose={() => setMiniCompany(null)}>
-          <p style={{ color: "#475569", fontSize: "12px", marginTop: 0 }}>Add the basics now — fill in the rest from the Companies tab later.</p>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "12px", marginTop: 0 }}>Add the basics now — fill in the rest from the Companies tab later.</p>
           <Input label="Company Name *" value={miniCompany.name} onChange={v => setMiniCompany(m => ({ ...m, name: v }))} />
           <Select label="Vertical" value={miniCompany.vertical} onChange={v => setMiniCompany(m => ({ ...m, vertical: v }))} options={VERTICALS} />
           <Select label="Stage" value={miniCompany.stage} onChange={v => setMiniCompany(m => ({ ...m, stage: v }))} options={STAGES} />
           <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
             <button onClick={() => setMiniCompany(null)}
-              style={{ flex: 1, background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+              style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
               Cancel
             </button>
             <button onClick={() => { if (miniCompany.name.trim()) saveMiniCompany(miniCompany); }}
@@ -656,7 +656,7 @@ const emptyMiniContact = () => ({ id: genId(), name: "", companyId: "", title: "
 const emptyActionItem = (outreachId = null, contactId = null) => ({ id: genId(), outreachId, contactId, description: "", priority: "M", effort: "M", done: false, backlog: false, dueDate: "" });
 const PRIORITIES = ["L", "M", "H"];
 const EFFORTS = ["L", "M", "H"];
-const PRIORITY_COLORS = { L: "#475569", M: "#f59e0b", H: "#ef4444" };
+const PRIORITY_COLORS = { L: "#71717a", M: "#f59e0b", H: "#ef4444" };
 const EFFORT_COLORS = { L: "#10b981", M: "#f59e0b", H: "#ef4444" };
 
 const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems, onError, userId }) => {
@@ -772,7 +772,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
 
   const cols = [
     { key: "date", label: "Date" },
-    { key: "contactId", label: "Contact", render: v => <span style={{ color: "#e2e8f0" }}>{ctName(v)}</span> },
+    { key: "contactId", label: "Contact", render: v => <span style={{ color: "var(--text-primary)" }}>{ctName(v)}</span> },
     { key: "jobId", label: "Re: Job", render: v => jobTitle(v) },
     { key: "channel", label: "Channel" },
     { key: "direction", label: "Dir", render: v => <span style={{ color: v === "Sent" ? "#3b82f6" : "#10b981" }}>{v}</span> },
@@ -782,7 +782,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       const count = actionCount(v);
       return count > 0
         ? <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433", borderRadius: "4px", padding: "2px 7px", fontSize: "11px", fontWeight: 700 }}>{count} open</span>
-        : <span style={{ color: "#1e293b", fontSize: "11px" }}>—</span>;
+        : <span style={{ color: "var(--border)", fontSize: "11px" }}>—</span>;
     }},
   ];
 
@@ -790,8 +790,8 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <div>
-          <div style={{ fontSize: "11px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Outreach</div>
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9" }}>{data.outreach.length} touchpoints</div>
+          <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Outreach</div>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.outreach.length} touchpoints</div>
         </div>
         <button onClick={() => { setModal(emptyOutreach()); setDupWarning(""); setPendingActions([]); setShowActions(false); }} style={{ background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD OUTREACH</button>
       </div>
@@ -799,8 +799,8 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
         {["All", ...OUTREACH_STATUSES].map(s => (
           <button key={s} onClick={() => setFilter(s)} style={{
             background: filter === s ? "#f59e0b22" : "transparent",
-            border: `1px solid ${filter === s ? "#f59e0b" : "#1e293b"}`,
-            color: filter === s ? "#f59e0b" : "#475569",
+            border: `1px solid ${filter === s ? "#f59e0b" : "var(--border)"}`,
+            color: filter === s ? "#f59e0b" : "var(--text-tertiary)",
             borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
             fontWeight: 600, cursor: "pointer",
           }}>{s}</button>
@@ -812,22 +812,22 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       {modal && !miniContact && (
         <Modal title="Outreach Entry" onClose={() => { setModal(null); setPendingActions([]); setShowActions(false); }}>
           <div style={{ marginBottom: "14px" }}>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Contact</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Contact</label>
             <select value={modal.contactId} onChange={e => setModal(m => ({ ...m, contactId: e.target.value }))}
-              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
               <option value="">— select contact —</option>
               {data.contacts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <button onClick={() => setMiniContact(emptyMiniContact())}
-              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "#475569", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
+              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "var(--text-tertiary)", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
               + Add New Contact
             </button>
             {dupWarning && <div style={{ marginTop: "6px", fontSize: "11px", color: "#f59e0b" }}>⚠ {dupWarning}</div>}
           </div>
           <div style={{ marginBottom: "14px" }}>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Related Job (optional)</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Related Job (optional)</label>
             <select value={modal.jobId} onChange={e => setModal(m => ({ ...m, jobId: e.target.value }))}
-              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
               <option value="">— none —</option>
               {data.jobs.map(j => <option key={j.id} value={j.id}>{jobTitle(j.id)}</option>)}
             </select>
@@ -841,46 +841,46 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
           <Textarea label="Notes" value={modal.notes} onChange={v => setModal(m => ({ ...m, notes: v }))} />
 
           {/* Progressive disclosure — action items */}
-          <div style={{ borderTop: "1px solid #1e293b", marginTop: "16px", paddingTop: "14px" }}>
+          <div style={{ borderTop: "1px solid var(--border)", marginTop: "16px", paddingTop: "14px" }}>
             <button onClick={() => { setShowActions(s => !s); if (!showActions && pendingActions.length === 0) setPendingActions([emptyActionItem(modal.id)]); }}
-              style={{ background: "transparent", border: "none", color: showActions ? "#f59e0b" : "#334155", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+              style={{ background: "transparent", border: "none", color: showActions ? "#f59e0b" : "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ fontSize: "14px" }}>{showActions ? "▾" : "▸"}</span>
               ACTION ITEMS {pendingActions.length > 0 && <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433", borderRadius: "4px", padding: "1px 6px", fontSize: "10px" }}>{pendingActions.filter(a => !a.done).length} open</span>}
             </button>
-            <div style={{ fontSize: "10px", color: "#334155", marginTop: "3px", marginLeft: "20px" }}>For follow-up tasks that came out of this touchpoint</div>
+            <div style={{ fontSize: "10px", color: "var(--text-tertiary)", marginTop: "3px", marginLeft: "20px" }}>For follow-up tasks that came out of this touchpoint</div>
 
             {showActions && (
               <div style={{ marginTop: "12px" }}>
                 {pendingActions.map((ai, i) => (
-                  <div key={ai.id} style={{ background: "#060d18", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
+                  <div key={ai.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <input type="checkbox" checked={ai.done} onChange={e => setPendingActions(prev => prev.map((a, j) => j === i ? { ...a, done: e.target.checked } : a))}
                           style={{ accentColor: "#10b981", width: "14px", height: "14px" }} />
-                        <span style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em" }}>Action {i + 1}</span>
+                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Action {i + 1}</span>
                       </div>
                       <button onClick={() => setPendingActions(prev => prev.filter((_, j) => j !== i))}
-                        style={{ background: "none", border: "none", color: "#334155", cursor: "pointer", fontSize: "14px" }}>×</button>
+                        style={{ background: "none", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "14px" }}>×</button>
                     </div>
                     <input value={ai.description} onChange={e => setPendingActions(prev => prev.map((a, j) => j === i ? { ...a, description: e.target.value } : a))}
                       placeholder="What needs to be done..."
-                      style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none", marginBottom: "8px" }} />
+                      style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none", marginBottom: "8px" }} />
                     <div style={{ display: "flex", gap: "12px" }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>Priority</div>
+                        <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>Priority</div>
                         <div style={{ display: "flex", gap: "5px" }}>
                           {PRIORITIES.map(p => (
                             <button key={p} onClick={() => setPendingActions(prev => prev.map((a, j) => j === i ? { ...a, priority: p } : a))}
-                              style={{ flex: 1, background: ai.priority === p ? PRIORITY_COLORS[p] + "22" : "transparent", border: `1px solid ${ai.priority === p ? PRIORITY_COLORS[p] : "#1e293b"}`, color: ai.priority === p ? PRIORITY_COLORS[p] : "#475569", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{p}</button>
+                              style={{ flex: 1, background: ai.priority === p ? PRIORITY_COLORS[p] + "22" : "transparent", border: `1px solid ${ai.priority === p ? PRIORITY_COLORS[p] : "var(--border)"}`, color: ai.priority === p ? PRIORITY_COLORS[p] : "var(--text-tertiary)", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{p}</button>
                           ))}
                         </div>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "10px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>Effort</div>
+                        <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "5px" }}>Effort</div>
                         <div style={{ display: "flex", gap: "5px" }}>
                           {EFFORTS.map(e => (
                             <button key={e} onClick={() => setPendingActions(prev => prev.map((a, j) => j === i ? { ...a, effort: e } : a))}
-                              style={{ flex: 1, background: ai.effort === e ? EFFORT_COLORS[e] + "22" : "transparent", border: `1px solid ${ai.effort === e ? EFFORT_COLORS[e] : "#1e293b"}`, color: ai.effort === e ? EFFORT_COLORS[e] : "#475569", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{e}</button>
+                              style={{ flex: 1, background: ai.effort === e ? EFFORT_COLORS[e] + "22" : "transparent", border: `1px solid ${ai.effort === e ? EFFORT_COLORS[e] : "var(--border)"}`, color: ai.effort === e ? EFFORT_COLORS[e] : "var(--text-tertiary)", borderRadius: "4px", padding: "4px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}>{e}</button>
                           ))}
                         </div>
                       </div>
@@ -888,7 +888,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
                   </div>
                 ))}
                 <button onClick={() => setPendingActions(prev => [...prev, emptyActionItem(modal.id)])}
-                  style={{ width: "100%", background: "transparent", border: "1px dashed #1e293b", color: "#334155", borderRadius: "6px", padding: "8px", fontSize: "11px", fontWeight: 600, cursor: "pointer", marginTop: "4px" }}>
+                  style={{ width: "100%", background: "transparent", border: "1px dashed var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "8px", fontSize: "11px", fontWeight: 600, cursor: "pointer", marginTop: "4px" }}>
                   + Add Another Action Item
                 </button>
               </div>
@@ -902,17 +902,17 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       {/* Mini Contact Modal */}
       {miniContact && !miniCompanyFromContact && (
         <Modal title="Quick Add Contact" onClose={() => setMiniContact(null)}>
-          <p style={{ color: "#475569", fontSize: "12px", marginTop: 0 }}>Add the basics now — fill in the rest from the Contacts tab later.</p>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "12px", marginTop: 0 }}>Add the basics now — fill in the rest from the Contacts tab later.</p>
           <Input label="Name *" value={miniContact.name} onChange={v => setMiniContact(m => ({ ...m, name: v }))} />
           <div style={{ marginBottom: "14px" }}>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company (optional)</label>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company (optional)</label>
             <select value={miniContact.companyId} onChange={e => setMiniContact(m => ({ ...m, companyId: e.target.value }))}
-              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
               <option value="">— select company —</option>
               {data.companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <button onClick={() => setMiniCompanyFromContact(emptyMiniCompany())}
-              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "#475569", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
+              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "var(--text-tertiary)", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
               + Add New Company
             </button>
             {dupCompanyWarning && <div style={{ marginTop: "6px", fontSize: "11px", color: "#f59e0b" }}>⚠ {dupCompanyWarning}</div>}
@@ -920,7 +920,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
           <Input label="Title / Role" value={miniContact.title} onChange={v => setMiniContact(m => ({ ...m, title: v }))} />
           <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
             <button onClick={() => setMiniContact(null)}
-              style={{ flex: 1, background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+              style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
               Cancel
             </button>
             <button onClick={() => { if (miniContact.name.trim()) saveMiniContact(miniContact); }}
@@ -934,8 +934,8 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       {/* Mini Company Modal (nested from Mini Contact) */}
       {miniCompanyFromContact && (
         <Modal title="Quick Add Company" onClose={() => setMiniCompanyFromContact(null)}>
-          <p style={{ color: "#475569", fontSize: "12px", marginTop: 0 }}>Add the basics — you'll return to the contact form after this.</p>
-          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "#0f172a", borderRadius: "6px", fontSize: "11px", color: "#475569" }}>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "12px", marginTop: 0 }}>Add the basics — you'll return to the contact form after this.</p>
+          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "var(--input-bg)", borderRadius: "6px", fontSize: "11px", color: "var(--text-tertiary)" }}>
             📍 Outreach → New Contact → <span style={{ color: "#f59e0b" }}>New Company</span>
           </div>
           <Input label="Company Name *" value={miniCompanyFromContact.name} onChange={v => setMiniCompanyFromContact(m => ({ ...m, name: v }))} />
@@ -943,7 +943,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
           <Select label="Stage" value={miniCompanyFromContact.stage} onChange={v => setMiniCompanyFromContact(m => ({ ...m, stage: v }))} options={STAGES} />
           <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
             <button onClick={() => setMiniCompanyFromContact(null)}
-              style={{ flex: 1, background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+              style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
               Cancel
             </button>
             <button onClick={() => { if (miniCompanyFromContact.name.trim()) saveMiniCompanyFromContact(miniCompanyFromContact); }}
@@ -982,34 +982,34 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
   };
 
   const StatCard = ({ label, value, color }) => (
-    <div style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "10px", padding: "20px 24px", flex: 1, minWidth: "120px" }}>
-      <div style={{ fontSize: "11px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{label}</div>
-      <div style={{ fontSize: "32px", fontWeight: 700, color: color || "#f1f5f9", fontFamily: "'DM Mono', monospace" }}>{value}</div>
+    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px 24px", flex: 1, minWidth: "120px" }}>
+      <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{label}</div>
+      <div style={{ fontSize: "32px", fontWeight: 700, color: color || "var(--text-primary)", fontFamily: "'DM Mono', monospace" }}>{value}</div>
     </div>
   );
 
   return (
     <div>
-      <div style={{ fontSize: "11px", color: "#475569", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Dashboard</div>
-      <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9", marginBottom: "24px" }}>Overview</div>
+      <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Dashboard</div>
+      <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "24px" }}>Overview</div>
 
       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
         <StatCard label="Interviewing" value={interviewing.length} color="#f59e0b" />
         <StatCard label="Follow-ups Due" value={followUps.length} color="#ef4444" />
-        <StatCard label="Open Actions" value={openActions.length} color={openActions.length > 0 ? "#ef4444" : "#f1f5f9"} />
-        <StatCard label="Contact Actions" value={newLeadActions.length} color={newLeadActions.length > 0 ? "#8b5cf6" : "#f1f5f9"} />
+        <StatCard label="Open Actions" value={openActions.length} color={openActions.length > 0 ? "#ef4444" : "var(--text-primary)"} />
+        <StatCard label="Contact Actions" value={newLeadActions.length} color={newLeadActions.length > 0 ? "#8b5cf6" : "var(--text-primary)"} />
       </div>
 
       {highPriorityActions.length > 0 && (
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🔴 High Priority Actions</div>
           {highPriorityActions.map(a => (
-            <div key={a.id} style={{ background: "#0a1628", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
                 <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
                   style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: "#e2e8f0", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
+                  <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
                   <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
                     style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "11px", cursor: "pointer", padding: 0, marginTop: "2px" }}>
                     re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
@@ -1018,7 +1018,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
               </div>
               <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
                 <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: 700, background: "#ef444422", border: "1px solid #ef444433", borderRadius: "3px", padding: "2px 5px" }}>P:H</span>
-                <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#f59e0b" : "#10b981", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
+                <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#f59e0b" : "#10b981", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
               </div>
             </div>
           ))}
@@ -1032,22 +1032,22 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
             const contact = data.contacts.find(c => c.id === a.contactId);
             const company = data.companies.find(co => co.id === contact?.companyId);
             return (
-              <div key={a.id} style={{ background: "#0a1628", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
                   <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
                     style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: "#e2e8f0", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
+                    <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
                     <div style={{ color: "#8b5cf6", fontSize: "11px", marginTop: "2px" }}>
                       {contact?.name || "—"}{company ? ` · ${company.name}` : ""}
                     </div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "10px", color: PRIORITY_COLORS[a.priority] || "#475569", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
-                  <span style={{ fontSize: "10px", color: EFFORT_COLORS[a.effort] || "#475569", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
+                  <span style={{ fontSize: "10px", color: PRIORITY_COLORS[a.priority] || "var(--text-tertiary)", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
+                  <span style={{ fontSize: "10px", color: EFFORT_COLORS[a.effort] || "var(--text-tertiary)", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
                   <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                    title="Move to backlog" style={{ background: "transparent", border: "1px solid #1e293b", color: "#334155", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
+                    title="Move to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
                 </div>
               </div>
             );
@@ -1059,12 +1059,12 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>📋 Other Open Actions</div>
           {openActions.filter(a => a.priority !== "H").map(a => (
-            <div key={a.id} style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
                 <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
                   style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ color: "#94a3b8", fontSize: "13px" }}>{a.description}</div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{a.description}</div>
                   <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
                     style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "11px", cursor: "pointer", padding: 0, marginTop: "2px" }}>
                     re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
@@ -1072,10 +1072,10 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                <span style={{ fontSize: "10px", color: a.priority === "M" ? "#f59e0b" : "#475569", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
-                <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#f59e0b" : "#10b981", fontWeight: 700, background: "#1e293b", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
+                <span style={{ fontSize: "10px", color: a.priority === "M" ? "#f59e0b" : "var(--text-tertiary)", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
+                <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#f59e0b" : "#10b981", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
                 <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                  title="Move to backlog" style={{ background: "transparent", border: "1px solid #1e293b", color: "#334155", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
+                  title="Move to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
               </div>
             </div>
           ))}
@@ -1086,12 +1086,12 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>⚡ Follow-ups Needed</div>
           {followUps.map(o => (
-            <div key={o.id} onClick={() => onEditOutreach(o)} style={{ background: "#0a1628", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+            <div key={o.id} onClick={() => onEditOutreach(o)} style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "#ef4444aa"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#ef444433"}>
               <div>
-                <div style={{ color: "#e2e8f0", fontWeight: 500, fontSize: "13px" }}>{ctName(o.contactId)}</div>
-                <div style={{ color: "#475569", fontSize: "11px", marginTop: "2px" }}>{o.summary} · {o.date}</div>
+                <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{ctName(o.contactId)}</div>
+                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>{o.summary} · {o.date}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Badge label="Follow-up Needed" />
@@ -1106,12 +1106,12 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🎯 Active Interviews</div>
           {interviewing.map(j => (
-            <div key={j.id} onClick={() => onEditJob(j)} style={{ background: "#0a1628", border: "1px solid #f59e0b33", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+            <div key={j.id} onClick={() => onEditJob(j)} style={{ background: "var(--surface)", border: "1px solid #f59e0b33", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "#f59e0baa"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "#f59e0b33"}>
               <div>
-                <div style={{ color: "#e2e8f0", fontWeight: 500, fontSize: "13px" }}>{j.title}</div>
-                <div style={{ color: "#475569", fontSize: "11px", marginTop: "2px" }}>{coName(j.companyId)}</div>
+                <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{j.title}</div>
+                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>{coName(j.companyId)}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Badge label="Interviewing" />
@@ -1124,18 +1124,18 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
 
       {backlogActions.length > 0 && (
         <div style={{ marginBottom: "24px" }}>
-          <button onClick={() => setShowBacklog(s => !s)} style={{ background: "transparent", border: "none", color: "#334155", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+          <button onClick={() => setShowBacklog(s => !s)} style={{ background: "transparent", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
             <span style={{ fontSize: "14px" }}>{showBacklog ? "▾" : "▸"}</span>
-            BACKLOG <span style={{ fontSize: "10px", color: "#334155", background: "#0f172a", border: "1px solid #1e293b", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>{backlogActions.length}</span>
+            BACKLOG <span style={{ fontSize: "10px", color: "var(--text-tertiary)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>{backlogActions.length}</span>
           </button>
           {showBacklog && backlogActions.map(a => (
-            <div key={a.id} style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.6 }}>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.6 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ color: "#475569", fontSize: "13px" }}>{a.description}</div>
-                <div style={{ color: "#334155", fontSize: "11px", marginTop: "2px" }}>re: {data.contacts.find(c => c.id === (data.outreach.find(o => o.id === a.outreachId)?.contactId))?.name || "—"}</div>
+                <div style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>{a.description}</div>
+                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>re: {data.contacts.find(c => c.id === (data.outreach.find(o => o.id === a.outreachId)?.contactId))?.name || "—"}</div>
               </div>
               <button onClick={async () => { await supabase.from("action_items").update({ backlog: false }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: false } : x) })); }}
-                style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>restore</button>
+                style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>restore</button>
             </div>
           ))}
         </div>
@@ -1143,14 +1143,14 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
 
       {noResponse.length > 0 && (
         <div>
-          <div style={{ fontSize: "12px", color: "#475569", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>💤 No Response</div>
+          <div style={{ fontSize: "12px", color: "var(--text-tertiary)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>💤 No Response</div>
           {noResponse.map(o => (
-            <div key={o.id} onClick={() => onEditOutreach(o)} style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "#475569"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "#1e293b"}>
+            <div key={o.id} onClick={() => onEditOutreach(o)} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text-tertiary)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
               <div>
-                <div style={{ color: "#94a3b8", fontSize: "13px" }}>{ctName(o.contactId)}</div>
-                <div style={{ color: "#334155", fontSize: "11px", marginTop: "2px" }}>{o.summary} · {o.date}</div>
+                <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{ctName(o.contactId)}</div>
+                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>{o.summary} · {o.date}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <Badge label="No Response" />
@@ -1185,30 +1185,30 @@ const LoginScreen = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
       <div style={{ width: "100%", maxWidth: "380px", padding: "0 24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "36px" }}>
           <div style={{ width: "28px", height: "28px", background: "#f59e0b", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ color: "#000", fontSize: "14px", fontWeight: 800 }}>R</span>
           </div>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "#e2e8f0" }}>recruiting.crm</span>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>recruiting.crm</span>
         </div>
         {sent ? (
-          <div style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "10px", padding: "28px", textAlign: "center" }}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "28px", textAlign: "center" }}>
             <div style={{ fontSize: "32px", marginBottom: "14px" }}>📬</div>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Check your email</div>
-            <div style={{ fontSize: "13px", color: "#475569", lineHeight: 1.6 }}>We sent a magic link to <span style={{ color: "#e2e8f0" }}>{email}</span>. Click it to sign in.</div>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>Check your email</div>
+            <div style={{ fontSize: "13px", color: "var(--text-tertiary)", lineHeight: 1.6 }}>We sent a magic link to <span style={{ color: "var(--text-primary)" }}>{email}</span>. Click it to sign in.</div>
           </div>
         ) : (
-          <div style={{ background: "#0a1628", border: "1px solid #1e293b", borderRadius: "10px", padding: "28px" }}>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "#f1f5f9", marginBottom: "20px" }}>Sign in</div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Email</label>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "28px" }}>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "20px" }}>Sign in</div>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Email</label>
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === "Enter" && sendLink()}
               placeholder="you@example.com"
-              style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "10px 12px", fontSize: "14px", outline: "none", marginBottom: "14px" }}
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "10px 12px", fontSize: "14px", outline: "none", marginBottom: "14px" }}
             />
             {error && <div style={{ fontSize: "12px", color: "#ef4444", marginBottom: "12px" }}>{error}</div>}
             <button onClick={sendLink} disabled={loading}
@@ -1405,16 +1405,16 @@ export default function App() {
   const coName = id => companies.find(c => c.id === id)?.name || "";
 
   if (authLoading) return (
-    <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-      <div style={{ color: "#475569", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading...</div>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ color: "var(--text-tertiary)", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading...</div>
     </div>
   );
 
   if (!session) return <LoginScreen />;
 
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#060d18", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
-      <div style={{ color: "#475569", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading your CRM...</div>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ color: "var(--text-tertiary)", fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading your CRM...</div>
     </div>
   );
 
@@ -1433,30 +1433,30 @@ export default function App() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#060d18",
+      minHeight: "100vh", background: "var(--bg)",
       fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-      color: "#94a3b8",
+      color: "var(--text-secondary)",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ borderBottom: "1px solid #0f172a", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px" }}>
+      <div style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ width: "28px", height: "28px", background: "#f59e0b", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ color: "#000", fontSize: "14px", fontWeight: 800 }}>R</span>
           </div>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "#e2e8f0", letterSpacing: "0.02em" }}>recruiting.crm</span>
-          <span style={{ fontSize: "10px", color: "#1e293b", background: "#0f172a", border: "1px solid #1e293b", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", letterSpacing: "0.02em" }}>recruiting.crm</span>
+          <span style={{ fontSize: "10px", color: "var(--border)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
+          <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
           <button onClick={exportData} style={{ background: "transparent", border: "1px solid #f59e0b55", color: "#f59e0b", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
-          <button onClick={() => supabase.auth.signOut()} style={{ background: "transparent", border: "1px solid #1e293b", color: "#475569", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>SIGN OUT</button>
+          <button onClick={() => supabase.auth.signOut()} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>SIGN OUT</button>
         </div>
       </div>
 
       {/* Nav */}
-      <div style={{ borderBottom: "1px solid #0f172a", padding: "0 28px", display: "flex", gap: "0" }}>
+      <div style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", display: "flex", gap: "0" }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             background: tab === t.id ? t.color + "12" : "none",
@@ -1482,7 +1482,7 @@ export default function App() {
       {/* Dashboard Outreach Modal */}
       {dashOutreachModal && (
         <Modal title={`Edit Outreach — ${dashOutreachModal.summary || "entry"}`} onClose={() => setDashOutreachModal(null)}>
-          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "#0f172a", borderRadius: "6px", fontSize: "11px", color: "#475569" }}>
+          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "var(--input-bg)", borderRadius: "6px", fontSize: "11px", color: "var(--text-tertiary)" }}>
             Editing from dashboard — changes save back to your outreach records.
           </div>
           <Select label="Status" value={dashOutreachModal.status} onChange={v => setDashOutreachModal(m => ({ ...m, status: v }))} options={OUTREACH_STATUSES} />
@@ -1491,19 +1491,19 @@ export default function App() {
           <Input label="Date" value={dashOutreachModal.date} onChange={v => setDashOutreachModal(m => ({ ...m, date: v }))} type="date" />
           <Input label="Subject / Summary" value={dashOutreachModal.summary} onChange={v => setDashOutreachModal(m => ({ ...m, summary: v }))} />
           <Textarea label="Notes" value={dashOutreachModal.notes} onChange={v => setDashOutreachModal(m => ({ ...m, notes: v }))} />
-          <div style={{ borderTop: "1px solid #1e293b", marginTop: "16px", paddingTop: "14px" }}>
+          <div style={{ borderTop: "1px solid var(--border)", marginTop: "16px", paddingTop: "14px" }}>
             <button onClick={() => { setDashShowActions(s => !s); if (!dashShowActions && dashOutreachActions.length === 0) setDashOutreachActions([{ id: "new_" + Math.random().toString(36).slice(2), outreachId: dashOutreachModal.id, description: "", priority: "M", effort: "M", done: false, backlog: false, dueDate: "" }]); }}
-              style={{ background: "transparent", border: "none", color: dashShowActions ? "#f59e0b" : "#334155", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+              style={{ background: "transparent", border: "none", color: dashShowActions ? "#f59e0b" : "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
               <span style={{ fontSize: "14px" }}>{dashShowActions ? "▾" : "▸"}</span>
               ACTION ITEMS {dashOutreachActions.filter(a => !a.done).length > 0 && <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433", borderRadius: "4px", padding: "1px 6px", fontSize: "10px" }}>{dashOutreachActions.filter(a => !a.done).length} open</span>}
             </button>
             {dashShowActions && (
               <div style={{ marginTop: "12px" }}>
                 {dashOutreachActions.map((ai, i) => (
-                  <div key={ai.id} style={{ background: "#060d18", border: "1px solid #1e293b", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
+                  <div key={ai.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px", marginBottom: "10px" }}>
                     <input value={ai.description} onChange={e => setDashOutreachActions(prev => prev.map((a, j) => j === i ? { ...a, description: e.target.value } : a))}
                       placeholder="What needs to be done..."
-                      style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none" }} />
+                      style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "5px", padding: "7px 9px", fontSize: "12px", outline: "none" }} />
                   </div>
                 ))}
               </div>
@@ -1516,7 +1516,7 @@ export default function App() {
       {/* Dashboard Job Modal */}
       {dashJobModal && (
         <Modal title={`Edit Job — ${dashJobModal.title} @ ${coName(dashJobModal.companyId)}`} onClose={() => setDashJobModal(null)}>
-          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "#0f172a", borderRadius: "6px", fontSize: "11px", color: "#475569" }}>
+          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "var(--input-bg)", borderRadius: "6px", fontSize: "11px", color: "var(--text-tertiary)" }}>
             Editing from dashboard — changes save back to your job records.
           </div>
           <Input label="Job Title" value={dashJobModal.title} onChange={v => setDashJobModal(m => ({ ...m, title: v }))} />
@@ -1531,9 +1531,9 @@ export default function App() {
       {/* Export Modal */}
       {showExport && (
         <Modal title="Export Data" onClose={() => setShowExport(false)}>
-          <p style={{ color: "#475569", fontSize: "13px", marginTop: 0 }}>Copy everything below and save it to a text file. Use Import to reload it next session.</p>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "13px", marginTop: 0 }}>Copy everything below and save it to a text file. Use Import to reload it next session.</p>
           <textarea readOnly value={exportJson} rows={12} onFocus={e => e.target.select()}
-            style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#94a3b8", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical", cursor: "text" }} />
+            style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-secondary)", borderRadius: "6px", padding: "10px", fontSize: "11px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical", cursor: "text" }} />
           <div style={{ marginTop: "12px", background: "#f59e0b22", border: "1px solid #f59e0b44", borderRadius: "6px", padding: "10px 14px", fontSize: "12px", color: "#f59e0b", textAlign: "center", fontWeight: 600 }}>
             ☝ Click the text above — it selects automatically. Then hit Ctrl+C to copy.
           </div>
@@ -1543,10 +1543,10 @@ export default function App() {
       {/* Import Modal */}
       {showImport && (
         <Modal title="Import Data" onClose={() => setShowImport(false)}>
-          <p style={{ color: "#475569", fontSize: "13px", marginTop: 0 }}>Paste your previously exported JSON below to restore your data.</p>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "13px", marginTop: 0 }}>Paste your previously exported JSON below to restore your data.</p>
           <textarea value={importVal} onChange={e => setImportVal(e.target.value)} rows={10}
             placeholder='{"companies": [...], "jobs": [...], ...}'
-            style={{ width: "100%", boxSizing: "border-box", background: "#0f172a", border: "1px solid #1e293b", color: "#e2e8f0", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical" }} />
+            style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "10px", fontSize: "12px", fontFamily: "'DM Mono', monospace", outline: "none", resize: "vertical" }} />
           <button onClick={importData} style={{ width: "100%", background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "12px" }}>LOAD DATA</button>
         </Modal>
       )}
