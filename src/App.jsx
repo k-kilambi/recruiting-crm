@@ -131,6 +131,22 @@ const Modal = ({ title, onClose, children }) => (
   </div>
 );
 
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+const Toast = ({ message, onClose }) => {
+  useEffect(() => {
+    if (!message) return;
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [message, onClose]);
+  if (!message) return null;
+  return (
+    <div style={{ position: "fixed", bottom: "28px", left: "50%", transform: "translateX(-50%)", background: "#1e0a0a", border: "1px solid #ef4444", color: "#fca5a5", padding: "10px 18px", borderRadius: "8px", fontSize: "13px", fontWeight: 600, zIndex: 9999, boxShadow: "0 4px 16px rgba(0,0,0,0.5)", display: "flex", alignItems: "center", gap: "14px", whiteSpace: "nowrap" }}>
+      ⚠ {message}
+      <button onClick={onClose} style={{ background: "none", border: "none", color: "#fca5a5", cursor: "pointer", fontSize: "16px", padding: 0, lineHeight: 1 }}>×</button>
+    </div>
+  );
+};
+
 // ─── TABLE ────────────────────────────────────────────────────────────────────
 const Table = ({ cols, rows, onEdit, onDelete }) => (
   <div style={{ overflowX: "auto" }}>
@@ -176,7 +192,7 @@ const Table = ({ cols, rows, onEdit, onDelete }) => (
 // ─── COMPANIES TAB ────────────────────────────────────────────────────────────
 const emptyCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", website: "", notes: "" });
 
-const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies }) => {
+const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError }) => {
   const [modal, setModal] = useState(null);
   const save = async (rec) => {
     const isNew = !rec.id || rec.id.startsWith("new_");
@@ -187,11 +203,11 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies }) => {
     if (isNew) {
       const { data: inserted, error } = await supabase.from("companies").insert(snake).select().single();
       if (!error && inserted) setCompanies(prev => [inserted, ...prev]);
-      else console.error("Company insert error:", error);
+      else { console.error("Company insert error:", error); onError("Failed to save company — please try again."); }
     } else {
       const { error } = await supabase.from("companies").update(snake).eq("id", rec.id);
       if (!error) setCompanies(prev => prev.map(c => c.id === rec.id ? { ...c, ...snake, id: rec.id } : c));
-      else console.error("Company update error:", error);
+      else { console.error("Company update error:", error); onError("Failed to save company — please try again."); }
     }
     setModal(null);
   };
@@ -234,7 +250,7 @@ const emptyJob = () => ({ id: genId(), title: "", companyId: "", function: "", s
 
 const emptyMiniCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", website: "", notes: "" });
 
-const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies }) => {
+const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onError }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniCompany, setMiniCompany] = useState(null);
@@ -252,11 +268,11 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies }) => 
     if (isNew) {
       const { data: inserted, error } = await supabase.from("jobs").insert(snake).select().single();
       if (!error && inserted) setJobs(prev => [inserted, ...prev]);
-      else console.error("Job insert error:", error);
+      else { console.error("Job insert error:", error); onError("Failed to save job — please try again."); }
     } else {
       const { error } = await supabase.from("jobs").update(snake).eq("id", rec.id);
       if (!error) setJobs(prev => prev.map(j => j.id === rec.id ? { ...j, ...snake, id: rec.id } : j));
-      else console.error("Job update error:", error);
+      else { console.error("Job update error:", error); onError("Failed to save job — please try again."); }
     }
     setModal(null);
   };
@@ -395,7 +411,7 @@ const MultiSelect = ({ label, value = [], onChange, options }) => {
   );
 };
 
-const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanies, setActionItems }) => {
+const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanies, setActionItems, onError }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniCompany, setMiniCompany] = useState(null);
@@ -418,11 +434,11 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
       if (!error && inserted) {
         setContacts(prev => [inserted, ...prev]);
         savedId = inserted.id;
-      } else { console.error("Contact insert error:", error); return; }
+      } else { console.error("Contact insert error:", error); onError("Failed to save contact — please try again."); return; }
     } else {
       const { error } = await supabase.from("contacts").update(snake).eq("id", rec.id);
       if (!error) setContacts(prev => prev.map(c => c.id === rec.id ? { ...c, ...snake, id: rec.id } : c));
-      else { console.error("Contact update error:", error); return; }
+      else { console.error("Contact update error:", error); onError("Failed to save contact — please try again."); return; }
     }
     // save action items
     for (const ai of pendingContactActions) {
@@ -643,7 +659,7 @@ const EFFORTS = ["L", "M", "H"];
 const PRIORITY_COLORS = { L: "#475569", M: "#f59e0b", H: "#ef4444" };
 const EFFORT_COLORS = { L: "#10b981", M: "#f59e0b", H: "#ef4444" };
 
-const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems }) => {
+const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems, onError }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniContact, setMiniContact] = useState(null);
@@ -668,11 +684,11 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       if (!error && inserted) {
         setOutreach(prev => [{ ...inserted, contactId: inserted.contact_id, jobId: inserted.job_id, draftReady: inserted.draft_ready }, ...prev]);
         savedId = inserted.id;
-      } else { console.error("Outreach insert error:", error); return; }
+      } else { console.error("Outreach insert error:", error); onError("Failed to save outreach — please try again."); return; }
     } else {
       const { error } = await supabase.from("outreach").update(snake).eq("id", rec.id);
       if (!error) setOutreach(prev => prev.map(o => o.id === rec.id ? { ...o, ...snake, contactId: snake.contact_id, jobId: snake.job_id, draftReady: snake.draft_ready, id: rec.id } : o));
-      else { console.error("Outreach update error:", error); return; }
+      else { console.error("Outreach update error:", error); onError("Failed to save outreach — please try again."); return; }
     }
     for (const ai of pendingActions) {
       if (ai.description && ai.description.trim()) {
@@ -1163,6 +1179,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   // ── UI state ─────────────────────────────────────────────────────────────────
+  const [toast, setToast] = useState(null);
+  const showError = (msg) => setToast(msg);
   const [tab, setTab] = useState("dashboard");
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -1254,9 +1272,11 @@ export default function App() {
     if (record.id && !record.id.startsWith("new_")) {
       const { data: updated, error } = await supabase.from(table).update(snake).eq("id", record.id).select().single();
       if (!error) setState(prev => prev.map(r => r.id === record.id ? toCamel(updated) : r));
+      else { console.error(`${table} update error:`, error); showError("Failed to save — please try again."); }
     } else {
       const { data: inserted, error } = await supabase.from(table).insert(snake).select().single();
       if (!error) setState(prev => [toCamel(inserted), ...prev]);
+      else { console.error(`${table} insert error:`, error); showError("Failed to save — please try again."); }
     }
   };
 
@@ -1374,10 +1394,10 @@ export default function App() {
       {/* Content */}
       <div style={{ padding: "28px", maxWidth: "1100px" }}>
         {tab === "dashboard" && <DashboardTab data={data} setData={supabaseSetData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
-        {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} />}
-        {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} />}
-        {tab === "contacts" && <ContactsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setContacts={setContacts} setCompanies={setCompanies} setActionItems={setActionItems} />}
-        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setActionItems={setActionItems} />}
+        {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} />}
+        {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} />}
+        {tab === "contacts" && <ContactsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setContacts={setContacts} setCompanies={setCompanies} setActionItems={setActionItems} onError={showError} />}
+        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setActionItems={setActionItems} onError={showError} />}
       </div>
 
       {/* Dashboard Outreach Modal */}
@@ -1451,6 +1471,8 @@ export default function App() {
           <button onClick={importData} style={{ width: "100%", background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "12px" }}>LOAD DATA</button>
         </Modal>
       )}
+
+      <Toast message={toast} onClose={() => setToast(null)} />
     </div>
   );
 }
