@@ -666,12 +666,12 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
     if (isNew) {
       const { data: inserted, error } = await supabase.from("outreach").insert(snake).select().single();
       if (!error && inserted) {
-        setOutreach(prev => [inserted, ...prev]);
+        setOutreach(prev => [{ ...inserted, contactId: inserted.contact_id, jobId: inserted.job_id, draftReady: inserted.draft_ready }, ...prev]);
         savedId = inserted.id;
       } else { console.error("Outreach insert error:", error); return; }
     } else {
       const { error } = await supabase.from("outreach").update(snake).eq("id", rec.id);
-      if (!error) setOutreach(prev => prev.map(o => o.id === rec.id ? { ...o, ...snake, id: rec.id } : o));
+      if (!error) setOutreach(prev => prev.map(o => o.id === rec.id ? { ...o, ...snake, contactId: snake.contact_id, jobId: snake.job_id, draftReady: snake.draft_ready, id: rec.id } : o));
       else { console.error("Outreach update error:", error); return; }
     }
     for (const ai of pendingActions) {
@@ -1197,7 +1197,7 @@ export default function App() {
       setCompanies(co.data || []);
       setJobs(jo.data || []);
       setContacts(ct.data || []);
-      setOutreach(ou.data || []);
+      setOutreach((ou.data || []).map(o => ({ ...o, contactId: o.contact_id, jobId: o.job_id, draftReady: o.draft_ready })));
       setActionItems((ai.data || []).map(a => ({
         ...a,
         outreachId: a.outreach_id,
