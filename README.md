@@ -1,16 +1,55 @@
-# React + Vite
+# Recruiting CRM
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack relational recruiting CRM built during an MBA internship search.
 
-Currently, two official plugins are available:
+The core insight: a job search is a web of relationships, not a list of applications. Existing tools are application-centric — no model for contacts, outreach history, or relationship networks. This is a CRM, not an ATS.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Live:** https://recruiting-crm-zeta.vercel.app
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the ESLint configuration
+- **Frontend:** React + Vite (JSX)
+- **Database:** Supabase (Postgres) with Row Level Security
+- **Auth:** Supabase Auth (magic link) via Resend
+- **Hosting:** Vercel (auto-deploys on push to `main`)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Data Model
+
+Five tables, fully relational:
+
+- **companies** — target employers
+- **jobs** — open roles, linked to companies
+- **contacts** — people, linked to companies, typed as Target / Bridge / Resource
+- **outreach** — real touchpoints only (calls, emails, messages), linked to contacts and jobs
+- **action_items** — tasks linked to either an outreach event or a contact directly
+
+Key design decisions:
+- Contacts are a unified table (entities, not roles — a bridge contact today can be a hiring manager tomorrow)
+- Outreach records represent real touchpoints only — no placeholder entries
+- Action items attach to both outreach and contacts, capturing pre-outreach leads without phantom records
+- Per-user data isolation enforced at the database level via RLS, not just the UI
+
+---
+
+## Roadmap
+
+- ✅ Stage 1 — Data model design, interactive prototype (React artifact)
+- ✅ Stage 2 — Local dev, GitHub, Supabase, Vercel
+- ✅ Stage 3 — Magic link auth, per-user RLS, Resend email delivery
+- ⬜ Stage 4 — AI layer: outreach draft generation and follow-up suggestions (Claude API)
+- ⬜ Stage 5 — Gmail read integration (read-only, human-in-the-loop)
+
+---
+
+## Running Locally
+
+```bash
+npm install
+npm run dev
+```
+
+Requires a `.env` file with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.

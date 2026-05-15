@@ -27,3 +27,6 @@ dist-ssr
 # One-time migration artifacts — not needed in repo history
 Old Data.md
 migrate-old-data.sql
+
+# AI assistant instructions — internal only
+CLAUDE.md
