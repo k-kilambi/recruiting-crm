@@ -1384,21 +1384,19 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🔴 High Priority Actions</div>
           {highPriorityActions.map(a => (
-            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                  style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+              <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
+                style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0, marginTop: "3px" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "14px" }}>{a.description}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px", flexWrap: "wrap" }}>
                   <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "11px", cursor: "pointer", padding: 0, marginTop: "2px" }}>
+                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "12px", cursor: "pointer", padding: 0 }}>
                     re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
                   </button>
+                  <span style={{ color: "#ef4444", fontSize: "11px", fontWeight: 700 }}>● High</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
                 </div>
-              </div>
-              <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: 700, background: "#ef444422", border: "1px solid #ef444433", borderRadius: "3px", padding: "2px 5px" }}>P:H</span>
-                <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#4F646F" : "#10b981", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
               </div>
             </div>
           ))}
@@ -1412,23 +1410,19 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
             const contact = data.contacts.find(c => c.id === a.contactId);
             const company = data.companies.find(co => co.id === contact?.companyId);
             return (
-              <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                  <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                    style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{a.description}</div>
-                    <div style={{ color: "#8b5cf6", fontSize: "11px", marginTop: "2px" }}>
-                      {contact?.name || "—"}{company ? ` · ${company.name}` : ""}
-                    </div>
+              <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
+                  style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0, marginTop: "3px" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "14px" }}>{a.description}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px", flexWrap: "wrap" }}>
+                    <span style={{ color: "#8b5cf6", fontSize: "12px" }}>{contact?.name || "—"}{company ? ` · ${company.name}` : ""}</span>
+                    <span style={{ color: PRIORITY_COLORS[a.priority], fontSize: "11px", fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
+                    <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "10px", color: PRIORITY_COLORS[a.priority] || "var(--text-tertiary)", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
-                  <span style={{ fontSize: "10px", color: EFFORT_COLORS[a.effort] || "var(--text-tertiary)", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
-                  <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                    title="Move to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
-                </div>
+                <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
+                  className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", cursor: "pointer", fontWeight: 600, flexShrink: 0, marginTop: "1px" }}>⏸ Defer</button>
               </div>
             );
           })}
@@ -1439,24 +1433,22 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#4F646F", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>📋 Other Open Actions</div>
           {openActions.filter(a => a.priority !== "H").map(a => (
-            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
-                <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                  style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{a.description}</div>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+              <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
+                style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0, marginTop: "3px" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "var(--text-primary)", fontSize: "14px" }}>{a.description}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px", flexWrap: "wrap" }}>
                   <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "11px", cursor: "pointer", padding: 0, marginTop: "2px" }}>
+                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "12px", cursor: "pointer", padding: 0 }}>
                     re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
                   </button>
+                  <span style={{ color: PRIORITY_COLORS[a.priority], fontSize: "11px", fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-                <span style={{ fontSize: "10px", color: a.priority === "M" ? "#4F646F" : "var(--text-tertiary)", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>P:{a.priority}</span>
-                <span style={{ fontSize: "10px", color: a.effort === "H" ? "#ef4444" : a.effort === "M" ? "#4F646F" : "#10b981", fontWeight: 700, background: "var(--border)", borderRadius: "3px", padding: "2px 5px" }}>E:{a.effort}</span>
-                <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                  title="Move to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", cursor: "pointer", fontWeight: 600 }}>backlog</button>
-              </div>
+              <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
+                className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", cursor: "pointer", fontWeight: 600, flexShrink: 0, marginTop: "1px" }}>⏸ Defer</button>
             </div>
           ))}
         </div>
@@ -1832,8 +1824,8 @@ export default function App() {
     }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-      {/* Header */}
-      <div style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px" }}>
+      {/* Header + Nav */}
+      <div style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", display: "flex", alignItems: "stretch", justifyContent: "space-between", height: "56px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ width: "28px", height: "28px", background: "#4F646F", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ color: "#fff", fontSize: "14px", fontWeight: 800 }}>R</span>
@@ -1841,7 +1833,21 @@ export default function App() {
           <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", letterSpacing: "0.02em" }}>recruiting.crm</span>
           <span className="header-version" style={{ fontSize: "10px", color: "var(--border)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div className="desktop-nav" style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              background: "none",
+              border: "none", cursor: "pointer",
+              padding: "0 18px", fontSize: "12px", fontWeight: 600,
+              color: tab === t.id ? t.color : "var(--text-tertiary)",
+              borderBottom: `2px solid ${tab === t.id ? t.color : "transparent"}`,
+              letterSpacing: "0.04em", textTransform: "uppercase",
+              transition: "color 0.15s",
+              display: "flex", alignItems: "center",
+            }}>{t.label}</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <div className="header-data-btns">
             <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
             <button onClick={exportData} style={{ background: "transparent", border: "1px solid #4F646F55", color: "#4F646F", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
@@ -1850,23 +1856,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Nav */}
-      <div className="desktop-nav" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", padding: "0 28px", gap: "0" }}>
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            background: "none",
-            border: "none", cursor: "pointer",
-            padding: "14px 18px", fontSize: "12px", fontWeight: 600,
-            color: tab === t.id ? t.color : "var(--text-tertiary)",
-            borderBottom: `2px solid ${tab === t.id ? t.color : "transparent"}`,
-            letterSpacing: "0.04em", textTransform: "uppercase",
-            transition: "color 0.15s",
-          }}>{t.label}</button>
-        ))}
-      </div>
-
       {/* Content */}
-      <div className="mobile-content-pad" style={{ padding: "28px", maxWidth: "1400px" }}>
+      <div className="mobile-content-pad" style={{ padding: "28px", maxWidth: "1400px", margin: "0 auto" }}>
         {tab === "dashboard" && <DashboardTab data={data} setData={supabaseSetData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
         {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
         {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
