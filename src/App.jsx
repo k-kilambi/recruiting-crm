@@ -205,28 +205,32 @@ const Table = ({ cols, rows, onEdit, onDelete }) => (
       {rows.length === 0 && (
         <div style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No records yet — add one above</div>
       )}
-      {rows.map(row => (
-        <div key={row.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", marginBottom: "10px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", flex: 1, marginRight: "12px" }}>
-              {cols[0].render ? cols[0].render(row[cols[0].key], row) : row[cols[0].key] || <span style={{ color: "var(--text-tertiary)" }}>—</span>}
+      {rows.map(row => {
+        const primaryCol = cols.find(c => c.cardPrimary) || cols[0];
+        const secondaryCols = cols.filter(c => c !== primaryCol && !c.hideInCard && row[c.key]);
+        return (
+          <div key={row.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", marginBottom: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", flex: 1, marginRight: "12px" }}>
+                {primaryCol.render ? primaryCol.render(row[primaryCol.key], row) : row[primaryCol.key] || <span style={{ color: "var(--text-tertiary)" }}>—</span>}
+              </div>
+              <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px" }}>Edit</button>
+                <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid var(--border)", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px" }}>Del</button>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-              <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px" }}>Edit</button>
-              <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid var(--border)", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px" }}>Del</button>
-            </div>
+            {secondaryCols.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", marginTop: "8px" }}>
+                {secondaryCols.map(c => (
+                  <span key={c.key} style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                    {c.render ? c.render(row[c.key], row) : row[c.key]}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          {cols.slice(1).filter(c => !c.hideInCard && row[c.key]).length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", marginTop: "8px" }}>
-              {cols.slice(1).filter(c => !c.hideInCard && row[c.key]).map(c => (
-                <span key={c.key} style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-                  {c.render ? c.render(row[c.key], row) : row[c.key]}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   </>
 );
@@ -345,7 +349,7 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
     { key: "companyId", label: "Company", render: v => coName(v) },
     { key: "function", label: "Function" },
     { key: "status", label: "Status", render: v => <Badge label={v} /> },
-    { key: "dateAdded", label: "Added" },
+    { key: "dateAdded", label: "Added", hideInCard: true },
     { key: "resumeLink", label: "Resume", render: v => v ? <a href={v} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", fontSize: "11px" }}>↗ link</a> : <span style={{ color: "var(--text-tertiary)" }}>—</span> },
     { key: "coverLetterLink", label: "CL", render: v => v ? <a href={v} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", fontSize: "11px" }}>↗ link</a> : <span style={{ color: "var(--text-tertiary)" }}>—</span> },
   ];
@@ -545,7 +549,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
       return <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>{types.map(t => <Badge key={t} label={t} />)}</div>;
     }},
     { key: "howKnown", label: "How Known" },
-    { key: "connectableTo", label: "Bridge To", render: v => v ? ctName(v) : "—" },
+    { key: "connectableTo", label: "Bridge To", render: v => v ? ctName(v) : "—", hideInCard: true },
   ];
 
   const showConnectable = Array.isArray(modal?.contactType)
@@ -814,10 +818,10 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
 
   const cols = [
     { key: "date", label: "Date" },
-    { key: "contactId", label: "Contact", render: v => <span style={{ color: "var(--text-primary)" }}>{ctName(v)}</span> },
+    { key: "contactId", label: "Contact", render: v => <span style={{ color: "var(--text-primary)" }}>{ctName(v)}</span>, cardPrimary: true },
     { key: "jobId", label: "Re: Job", render: v => jobTitle(v) },
-    { key: "channel", label: "Channel" },
-    { key: "direction", label: "Dir", render: v => <span style={{ color: v === "Sent" ? "#3b82f6" : "#10b981" }}>{v}</span> },
+    { key: "channel", label: "Channel", hideInCard: true },
+    { key: "direction", label: "Dir", render: v => <span style={{ color: v === "Sent" ? "#3b82f6" : "#10b981" }}>{v}</span>, hideInCard: true },
     { key: "status", label: "Status", render: v => <Badge label={v} /> },
     { key: "summary", label: "Summary" },
     { key: "id", label: "Actions", render: (v) => {
