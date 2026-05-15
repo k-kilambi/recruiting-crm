@@ -241,6 +241,7 @@ const emptyCompany = () => ({ id: genId(), name: "", vertical: "", stage: "", we
 
 const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, userId }) => {
   const [modal, setModal] = useState(null);
+  const [gridView, setGridView] = useState(true);
   const save = async (rec) => {
     const isNew = !rec.id || rec.id.startsWith("new_");
     const snake = {
@@ -275,9 +276,47 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
           <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Companies</div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.companies.length} tracked</div>
         </div>
-        <button onClick={() => setModal(emptyCompany())} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>+ ADD COMPANY</button>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <div className="board-toggle" style={{ display: "flex", gap: "6px" }}>
+            {[{ v: true, label: "Grid" }, { v: false, label: "Table" }].map(({ v, label }) => (
+              <button key={label} onClick={() => setGridView(v)} style={{
+                background: gridView === v ? "#4F646F18" : "transparent",
+                border: `1px solid ${gridView === v ? "#4F646F" : "var(--border)"}`,
+                color: gridView === v ? "#4F646F" : "var(--text-tertiary)",
+                borderRadius: "5px", padding: "4px 11px", fontSize: "11px", fontWeight: 600, cursor: "pointer",
+              }}>{label}</button>
+            ))}
+          </div>
+          <button onClick={() => setModal(emptyCompany())} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>+ ADD COMPANY</button>
+        </div>
       </div>
-      <Table cols={cols} rows={data.companies} onEdit={setModal} onDelete={del} />
+
+      {/* Grid view */}
+      {gridView && (
+        <div className="table-desktop" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "14px", marginBottom: "16px" }}>
+          {data.companies.length === 0 && (
+            <div style={{ gridColumn: "1/-1", padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No companies yet — add one above</div>
+          )}
+          {data.companies.map(c => (
+            <div key={c.id} style={{ background: "var(--modal-bg)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", lineHeight: "1.3" }}>{c.name}</div>
+                <button onClick={() => setModal(c)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 9px", fontSize: "11px", flexShrink: 0 }}>Edit</button>
+              </div>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {c.vertical && <Badge label={c.vertical} color="#3b82f6" />}
+                {c.stage && <Badge label={c.stage} color="#8b5cf6" />}
+              </div>
+              {c.website && <a href={c.website.startsWith("http") ? c.website : `https://${c.website}`} target="_blank" rel="noreferrer" style={{ fontSize: "12px", color: "#3b82f6", textDecoration: "none" }}>↗ {c.website.replace(/^https?:\/\//, "")}</a>}
+              {c.notes && <div style={{ fontSize: "12px", color: "var(--text-tertiary)", lineHeight: "1.5" }}>{c.notes}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+      {gridView && <div className="table-mobile"><Table cols={cols} rows={data.companies} onEdit={setModal} onDelete={del} /></div>}
+
+      {/* Table view */}
+      {!gridView && <Table cols={cols} rows={data.companies} onEdit={setModal} onDelete={del} />}
       {modal && (
         <Modal title={modal.name || "New Company"} onClose={() => setModal(null)}>
           <Input label="Company Name" value={modal.name} onChange={v => setModal(m => ({ ...m, name: v }))} />
@@ -626,6 +665,15 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
 
   const [pendingContactActions, setPendingContactActions] = useState([]);
   const [showContactActions, setShowContactActions] = useState(false);
+  const [gridView, setGridView] = useState(true);
+
+  const toCamelContact = (c) => ({
+    ...c,
+    companyId: c.company_id,
+    contactType: c.contact_type,
+    howKnown: c.how_known,
+    connectableTo: c.connectable_to,
+  });
 
   const save = async (rec) => {
     const isNew = !rec.id || rec.id.startsWith("new_");
@@ -639,12 +687,12 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
     if (isNew) {
       const { data: inserted, error } = await supabase.from("contacts").insert({ ...snake, user_id: userId }).select().single();
       if (!error && inserted) {
-        setContacts(prev => [inserted, ...prev]);
+        setContacts(prev => [toCamelContact(inserted), ...prev]);
         savedId = inserted.id;
       } else { console.error("Contact insert error:", error); onError("Failed to save contact — please try again."); return; }
     } else {
       const { error } = await supabase.from("contacts").update(snake).eq("id", rec.id);
-      if (!error) setContacts(prev => prev.map(c => c.id === rec.id ? { ...c, ...snake, id: rec.id } : c));
+      if (!error) setContacts(prev => prev.map(c => c.id === rec.id ? toCamelContact({ ...c, ...snake, id: rec.id }) : c));
       else { console.error("Contact update error:", error); onError("Failed to save contact — please try again."); return; }
     }
     // save action items
@@ -726,18 +774,67 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
         </div>
         <button onClick={() => { setModal(emptyContact()); setDupWarning(""); }} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD CONTACT</button>
       </div>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        {["All", ...CONTACT_TYPES].map(s => (
-          <button key={s} onClick={() => setFilter(s)} style={{
-            background: filter === s ? "#4F646F18" : "transparent",
-            border: `1px solid ${filter === s ? "#4F646F" : "var(--border)"}`,
-            color: filter === s ? "#4F646F" : "var(--text-tertiary)",
-            borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
-            fontWeight: 600, cursor: "pointer",
-          }}>{s}</button>
-        ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {["All", ...CONTACT_TYPES].map(s => (
+            <button key={s} onClick={() => setFilter(s)} style={{
+              background: filter === s ? "#4F646F18" : "transparent",
+              border: `1px solid ${filter === s ? "#4F646F" : "var(--border)"}`,
+              color: filter === s ? "#4F646F" : "var(--text-tertiary)",
+              borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
+              fontWeight: 600, cursor: "pointer",
+            }}>{s}</button>
+          ))}
+        </div>
+        <div className="board-toggle" style={{ display: "flex", gap: "6px" }}>
+          {[{ v: true, label: "Grid" }, { v: false, label: "Table" }].map(({ v, label }) => (
+            <button key={label} onClick={() => setGridView(v)} style={{
+              background: gridView === v ? "#4F646F18" : "transparent",
+              border: `1px solid ${gridView === v ? "#4F646F" : "var(--border)"}`,
+              color: gridView === v ? "#4F646F" : "var(--text-tertiary)",
+              borderRadius: "5px", padding: "4px 11px", fontSize: "11px", fontWeight: 600, cursor: "pointer",
+            }}>{label}</button>
+          ))}
+        </div>
       </div>
-      <Table cols={cols} rows={filtered} onEdit={r => { setModal(r); setDupWarning(""); }} onDelete={del} />
+
+      {/* Desktop grid */}
+      {gridView && (
+        <div className="table-desktop" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "14px", marginBottom: "16px" }}>
+          {filtered.length === 0 && (
+            <div style={{ gridColumn: "1/-1", padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No contacts yet — add one above</div>
+          )}
+          {filtered.map(c => (
+            <div key={c.id} style={{ background: "var(--modal-bg)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>{c.name}</div>
+                  {(c.title || c.companyId) && (
+                    <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                      {[c.title, c.companyId ? coName(c.companyId) : null].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => openContactModal(c)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 9px", fontSize: "11px", flexShrink: 0 }}>Edit</button>
+              </div>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                {(Array.isArray(c.contactType) ? c.contactType : []).map(t => <Badge key={t} label={t} />)}
+                {c.howKnown && <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>{c.howKnown}</span>}
+              </div>
+              {(c.linkedin || c.email) && (
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                  {c.linkedin && <a href={c.linkedin} target="_blank" rel="noreferrer" style={{ fontSize: "12px", color: "#3b82f6", textDecoration: "none" }}>↗ LinkedIn</a>}
+                  {c.email && <a href={`mailto:${c.email}`} style={{ fontSize: "12px", color: "#3b82f6", textDecoration: "none" }}>✉ {c.email}</a>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {gridView && <div className="table-mobile"><Table cols={cols} rows={filtered} onEdit={r => openContactModal(r)} onDelete={del} /></div>}
+
+      {/* Table view */}
+      {!gridView && <Table cols={cols} rows={filtered} onEdit={r => { setModal(r); setDupWarning(""); }} onDelete={del} />}
 
       {/* Contact Modal */}
       {modal && !miniCompany && (
@@ -875,6 +972,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
   const [dupCompanyWarning, setDupCompanyWarning] = useState("");
   const [showActions, setShowActions] = useState(false);
   const [pendingActions, setPendingActions] = useState([]);
+  const [feedView, setFeedView] = useState(true);
 
   const save = async (rec) => {
     const isNew = !rec.id || rec.id.startsWith("new_");
@@ -1002,18 +1100,86 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
         </div>
         <button onClick={() => { setModal(emptyOutreach()); setDupWarning(""); setPendingActions([]); setShowActions(false); }} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD OUTREACH</button>
       </div>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
-        {["All", ...OUTREACH_STATUSES].map(s => (
-          <button key={s} onClick={() => setFilter(s)} style={{
-            background: filter === s ? "#4F646F18" : "transparent",
-            border: `1px solid ${filter === s ? "#4F646F" : "var(--border)"}`,
-            color: filter === s ? "#4F646F" : "var(--text-tertiary)",
-            borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
-            fontWeight: 600, cursor: "pointer",
-          }}>{s}</button>
-        ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {["All", ...OUTREACH_STATUSES].map(s => (
+            <button key={s} onClick={() => setFilter(s)} style={{
+              background: filter === s ? "#4F646F18" : "transparent",
+              border: `1px solid ${filter === s ? "#4F646F" : "var(--border)"}`,
+              color: filter === s ? "#4F646F" : "var(--text-tertiary)",
+              borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
+              fontWeight: 600, cursor: "pointer",
+            }}>{s}</button>
+          ))}
+        </div>
+        <div className="board-toggle" style={{ display: "flex", gap: "6px" }}>
+          {[{ v: true, label: "Feed" }, { v: false, label: "Table" }].map(({ v, label }) => (
+            <button key={label} onClick={() => setFeedView(v)} style={{
+              background: feedView === v ? "#8b5cf618" : "transparent",
+              border: `1px solid ${feedView === v ? "#8b5cf6" : "var(--border)"}`,
+              color: feedView === v ? "#8b5cf6" : "var(--text-tertiary)",
+              borderRadius: "5px", padding: "4px 11px", fontSize: "11px", fontWeight: 600, cursor: "pointer",
+            }}>{label}</button>
+          ))}
+        </div>
       </div>
-      <Table cols={cols} rows={sorted} onEdit={openModal} onDelete={del} />
+
+      {/* Feed view (desktop) */}
+      {feedView && (() => {
+        const fmtDate = (d) => {
+          if (!d) return "No Date";
+          const [y, m, day] = d.split("-").map(Number);
+          return new Date(y, m - 1, day).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+        };
+        const groups = {};
+        const order = [];
+        sorted.forEach(o => {
+          const k = o.date || "no-date";
+          if (!groups[k]) { groups[k] = []; order.push(k); }
+          groups[k].push(o);
+        });
+        return (
+          <div className="table-desktop">
+            {sorted.length === 0 && <div style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No outreach yet — add one above</div>}
+            {order.map(date => (
+              <div key={date} style={{ marginBottom: "24px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "10px", paddingBottom: "6px", borderBottom: "1px solid var(--border-subtle)" }}>
+                  {fmtDate(date)}
+                </div>
+                {groups[date].map(o => (
+                  <div key={o.id} style={{
+                    background: "var(--modal-bg)",
+                    border: "1px solid var(--border)",
+                    borderLeft: `3px solid ${o.direction === "Sent" ? "#3b82f6" : "#10b981"}`,
+                    borderRadius: "8px", padding: "12px 16px", marginBottom: "8px",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", marginBottom: "4px" }}>
+                          <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>{ctName(o.contactId)}</span>
+                          <Badge label={o.status} />
+                        </div>
+                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: o.summary ? "6px" : 0 }}>
+                          {o.direction} via {o.channel}{o.jobId ? ` · ${jobTitle(o.jobId)}` : ""}
+                        </div>
+                        {o.summary && <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: "1.4" }}>{o.summary}</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
+                        {actionCount(o.id) > 0 && <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433", borderRadius: "4px", padding: "2px 7px", fontSize: "11px", fontWeight: 700 }}>{actionCount(o.id)} open</span>}
+                        <button onClick={() => openModal(o)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 9px", fontSize: "11px" }}>Edit</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+      {feedView && <div className="table-mobile"><Table cols={cols} rows={sorted} onEdit={openModal} onDelete={del} /></div>}
+
+      {/* Table view */}
+      {!feedView && <Table cols={cols} rows={sorted} onEdit={openModal} onDelete={del} />}
 
       {/* Outreach Modal */}
       {modal && !miniContact && (
@@ -1498,7 +1664,13 @@ export default function App() {
         resumeLink: j.resume_link,
         coverLetterLink: j.cover_letter_link,
       })));
-      setContacts(ct.data || []);
+      setContacts((ct.data || []).map(c => ({
+        ...c,
+        companyId: c.company_id,
+        contactType: c.contact_type,
+        howKnown: c.how_known,
+        connectableTo: c.connectable_to,
+      })));
       setOutreach((ou.data || []).map(o => ({ ...o, contactId: o.contact_id, jobId: o.job_id, draftReady: o.draft_ready })));
       setActionItems((ai.data || []).map(a => ({
         ...a,
