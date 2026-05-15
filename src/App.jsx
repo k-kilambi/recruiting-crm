@@ -1426,10 +1426,7 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
                 </div>
                 <div style={{ flex: 1, fontSize: "17px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
                 <div className="dash-action-meta">
-                  <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                    <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>contact </span>
-                    <span style={{ color: "#8b5cf6" }}>{contact?.name || "—"}{company ? ` · ${company.name}` : ""}</span>
-                  </span>
+                  <span style={{ whiteSpace: "nowrap", fontSize: "13px", color: "#8b5cf6" }}>{contact?.name || "—"}{company ? ` · ${company.name}` : ""}</span>
                   <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
                     <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>priority </span>
                     <span style={{ color: PRIORITY_COLORS[a.priority], fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
