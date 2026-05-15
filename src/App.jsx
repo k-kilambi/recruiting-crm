@@ -1384,19 +1384,19 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🔴 High Priority Actions</div>
           {highPriorityActions.map(a => (
-            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0, marginTop: "3px" }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "14px" }}>{a.description}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px", flexWrap: "wrap" }}>
-                  <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "12px", cursor: "pointer", padding: 0 }}>
-                    re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
-                  </button>
-                  <span style={{ color: "#ef4444", fontSize: "11px", fontWeight: 700 }}>● High</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
-                </div>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", alignItems: "center", gap: "14px" }}>
+              <div onClick={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
+                style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
+              </div>
+              <div style={{ flex: 1, fontSize: "17px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", flexShrink: 0 }}>
+                <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
+                  style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "13px", cursor: "pointer", padding: 0, whiteSpace: "nowrap" }}>
+                  re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
+                </button>
+                <span style={{ color: "#ef4444", fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap" }}>● High</span>
+                <span style={{ fontSize: "13px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace", whiteSpace: "nowrap" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
               </div>
             </div>
           ))}
@@ -1410,19 +1410,19 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
             const contact = data.contacts.find(c => c.id === a.contactId);
             const company = data.companies.find(co => co.id === contact?.companyId);
             return (
-              <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                  style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0, marginTop: "3px" }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "14px" }}>{a.description}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px", flexWrap: "wrap" }}>
-                    <span style={{ color: "#8b5cf6", fontSize: "12px" }}>{contact?.name || "—"}{company ? ` · ${company.name}` : ""}</span>
-                    <span style={{ color: PRIORITY_COLORS[a.priority], fontSize: "11px", fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
-                    <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
-                  </div>
+              <div key={a.id} style={{ background: "var(--surface)", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", alignItems: "center", gap: "14px" }}>
+                <div onClick={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
+                  style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
                 </div>
-                <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                  className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", cursor: "pointer", fontWeight: 600, flexShrink: 0, marginTop: "1px" }}>⏸ Defer</button>
+                <div style={{ flex: 1, fontSize: "17px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "14px", flexShrink: 0 }}>
+                  <span style={{ color: "#8b5cf6", fontSize: "13px", whiteSpace: "nowrap" }}>{contact?.name || "—"}{company ? ` · ${company.name}` : ""}</span>
+                  <span style={{ color: PRIORITY_COLORS[a.priority], fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap" }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
+                  <span style={{ fontSize: "13px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace", whiteSpace: "nowrap" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
+                  <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
+                    className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "4px 10px", fontSize: "13px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>⏸ Defer</button>
+                </div>
               </div>
             );
           })}
@@ -1433,22 +1433,22 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#4F646F", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>📋 Other Open Actions</div>
           {openActions.filter(a => a.priority !== "H").map(a => (
-            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              <input type="checkbox" checked={a.done} onChange={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                style={{ accentColor: "#10b981", width: "15px", height: "15px", flexShrink: 0, marginTop: "3px" }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ color: "var(--text-primary)", fontSize: "14px" }}>{a.description}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px", flexWrap: "wrap" }}>
-                  <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "12px", cursor: "pointer", padding: 0 }}>
-                    re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
-                  </button>
-                  <span style={{ color: PRIORITY_COLORS[a.priority], fontSize: "11px", fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
-                </div>
+            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", display: "flex", alignItems: "center", gap: "14px" }}>
+              <div onClick={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
+                style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
               </div>
-              <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "11px", cursor: "pointer", fontWeight: 600, flexShrink: 0, marginTop: "1px" }}>⏸ Defer</button>
+              <div style={{ flex: 1, fontSize: "17px", color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", flexShrink: 0 }}>
+                <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
+                  style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "13px", cursor: "pointer", padding: 0, whiteSpace: "nowrap" }}>
+                  re: {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
+                </button>
+                <span style={{ color: PRIORITY_COLORS[a.priority], fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap" }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
+                <span style={{ fontSize: "13px", color: "var(--text-tertiary)", fontFamily: "'DM Mono', monospace", whiteSpace: "nowrap" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"} effort</span>
+                <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
+                  className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "4px 10px", fontSize: "13px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>⏸ Defer</button>
+              </div>
             </div>
           ))}
         </div>
