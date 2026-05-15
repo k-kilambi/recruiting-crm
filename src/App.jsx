@@ -159,44 +159,77 @@ const Toast = ({ message, onClose }) => {
 
 // ─── TABLE ────────────────────────────────────────────────────────────────────
 const Table = ({ cols, rows, onEdit, onDelete }) => (
-  <div style={{ overflowX: "auto" }}>
-    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-      <thead>
-        <tr>
-          {cols.map(c => (
-            <th key={c.key} style={{
-              textAlign: "left", padding: "10px 14px",
-              borderBottom: "1px solid var(--border)",
-              color: "var(--text-tertiary)", fontSize: "11px", fontWeight: 600,
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              fontFamily: "'DM Mono', monospace",
-            }}>{c.label}</th>
-          ))}
-          <th style={{ width: "80px", borderBottom: "1px solid var(--border)" }} />
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 && (
-          <tr><td colSpan={cols.length + 1} style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No records yet — add one above</td></tr>
-        )}
-        {rows.map((row, i) => (
-          <tr key={row.id} style={{ background: i % 2 === 0 ? "transparent" : "var(--stripe)" }}>
+  <>
+    {/* Desktop table */}
+    <div className="table-desktop" style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <thead>
+          <tr>
             {cols.map(c => (
-              <td key={c.key} style={{ padding: "10px 14px", color: "var(--text-secondary)", borderBottom: "1px solid var(--border-subtle)", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {c.render ? c.render(row[c.key], row) : row[c.key] || <span style={{ color: "var(--text-tertiary)" }}>—</span>}
-              </td>
+              <th key={c.key} style={{
+                textAlign: "left", padding: "10px 14px",
+                borderBottom: "1px solid var(--border)",
+                color: "var(--text-tertiary)", fontSize: "11px", fontWeight: 600,
+                letterSpacing: "0.06em", textTransform: "uppercase",
+                fontFamily: "'DM Mono', monospace",
+              }}>{c.label}</th>
             ))}
-            <td style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Edit</button>
-                <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid var(--border)", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Del</button>
-              </div>
-            </td>
+            <th style={{ width: "80px", borderBottom: "1px solid var(--border)" }} />
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr><td colSpan={cols.length + 1} style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No records yet — add one above</td></tr>
+          )}
+          {rows.map((row, i) => (
+            <tr key={row.id} style={{ background: i % 2 === 0 ? "transparent" : "var(--stripe)" }}>
+              {cols.map(c => (
+                <td key={c.key} style={{ padding: "10px 14px", color: "var(--text-secondary)", borderBottom: "1px solid var(--border-subtle)", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {c.render ? c.render(row[c.key], row) : row[c.key] || <span style={{ color: "var(--text-tertiary)" }}>—</span>}
+                </td>
+              ))}
+              <td style={{ padding: "10px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Edit</button>
+                  <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid var(--border)", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "3px 8px", fontSize: "11px" }}>Del</button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Mobile cards */}
+    <div className="table-mobile">
+      {rows.length === 0 && (
+        <div style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No records yet — add one above</div>
+      )}
+      {rows.map(row => (
+        <div key={row.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", marginBottom: "10px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", flex: 1, marginRight: "12px" }}>
+              {cols[0].render ? cols[0].render(row[cols[0].key], row) : row[cols[0].key] || <span style={{ color: "var(--text-tertiary)" }}>—</span>}
+            </div>
+            <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+              <button onClick={() => onEdit(row)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px" }}>Edit</button>
+              <button onClick={() => onDelete(row.id)} style={{ background: "none", border: "1px solid var(--border)", color: "#ef444466", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px" }}>Del</button>
+            </div>
+          </div>
+          {cols.slice(1).filter(c => !c.hideInCard && row[c.key]).length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", marginTop: "8px" }}>
+              {cols.slice(1).filter(c => !c.hideInCard && row[c.key]).map(c => (
+                <span key={c.key} style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                  {c.render ? c.render(row[c.key], row) : row[c.key]}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </>
+)
 );
 
 // ─── COMPANIES TAB ────────────────────────────────────────────────────────────
@@ -228,7 +261,7 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
     { key: "vertical", label: "Vertical", render: v => v ? <Badge label={v} color="#3b82f6" /> : "—" },
     { key: "stage", label: "Stage" },
     { key: "website", label: "Website" },
-    { key: "notes", label: "Notes" },
+    { key: "notes", label: "Notes", hideInCard: true },
   ];
 
   return (

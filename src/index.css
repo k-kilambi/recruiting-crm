@@ -47,6 +47,9 @@ tbody tr:hover {
   display: none;
 }
 
+.table-desktop { display: block; }
+.table-mobile  { display: none; }
+
 @media (max-width: 768px) {
   .desktop-nav    { display: none; }
   .header-data-btns { display: none; }
@@ -67,6 +70,11 @@ tbody tr:hover {
   }
 
   .mobile-content-pad {
-    padding-bottom: 76px !important;
+    padding: 16px 16px 76px !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
   }
+
+  .table-desktop { display: none; }
+  .table-mobile  { display: block; }
 }
