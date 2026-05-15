@@ -1863,7 +1863,7 @@ export default function App() {
           <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", letterSpacing: "0.02em" }}>recruiting.crm</span>
           <span className="header-version" style={{ fontSize: "10px", color: "var(--border)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
         </div>
-        <div className="desktop-nav" style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+        <div className="desktop-nav" style={{ alignItems: "stretch", gap: 0 }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               background: "none",
