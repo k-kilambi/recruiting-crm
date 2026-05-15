@@ -1362,9 +1362,9 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
   };
 
   const StatCard = ({ label, value, color }) => (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px 24px", flex: 1, minWidth: "120px" }}>
-      <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{label}</div>
-      <div style={{ fontSize: "32px", fontWeight: 700, color: color || "var(--text-primary)", fontFamily: "'DM Mono', monospace" }}>{value}</div>
+    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 14px", flex: 1, minWidth: "90px" }}>
+      <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "22px", fontWeight: 700, color: color || "var(--text-primary)", fontFamily: "'DM Mono', monospace" }}>{value}</div>
     </div>
   );
 
@@ -1373,11 +1373,11 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
       <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Dashboard</div>
       <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "24px" }}>Overview</div>
 
-      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "28px" }}>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
+        <StatCard label="To-Do" value={openActions.length + newLeadActions.length + followUps.length} color={openActions.length + newLeadActions.length + followUps.length > 0 ? "#ef4444" : "var(--text-primary)"} />
+        <StatCard label="Apps Sent" value={data.jobs.filter(j => ["Applied", "Interviewing", "Offer", "Rejected", "Withdrew"].includes(j.status)).length} />
+        <StatCard label="Waiting" value={data.jobs.filter(j => j.status === "Applied").length} color={data.jobs.filter(j => j.status === "Applied").length > 0 ? "#f59e0b" : "var(--text-primary)"} />
         <StatCard label="Interviewing" value={interviewing.length} color={STATUS_COLORS.Interviewing} />
-        <StatCard label="Follow-ups Due" value={followUps.length} color="#ef4444" />
-        <StatCard label="Open Actions" value={openActions.length} color={openActions.length > 0 ? "#ef4444" : "var(--text-primary)"} />
-        <StatCard label="Contact Actions" value={newLeadActions.length} color={newLeadActions.length > 0 ? "#8b5cf6" : "var(--text-primary)"} />
       </div>
 
       {highPriorityActions.length > 0 && (
