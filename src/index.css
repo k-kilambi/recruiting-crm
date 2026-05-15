@@ -1,9 +1,9 @@
 :root {
   --bg:             #F4FAFF;
-  --surface:        #EBF2F2;
-  --surface-raised: #DEE7E7;
-  --border:         #C8D6D6;
-  --border-subtle:  #DEE7E7;
+  --surface:        #DEE7E7;
+  --surface-raised: #CDD8D8;
+  --border:         #B8CACA;
+  --border-subtle:  #CDD8D8;
   --text-primary:   #1e2122;
   --text-secondary: #535657;
   --text-tertiary:  #7d8f94;
