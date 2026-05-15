@@ -296,23 +296,23 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
 const KanbanCardInner = ({ job, coName, onEdit }) => (
   <div style={{
     background: "var(--modal-bg)", border: "1px solid var(--border)", borderRadius: "8px",
-    padding: "10px 12px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "grab",
+    padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "grab",
   }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "4px" }}>
-      <div style={{ fontWeight: 600, fontSize: "13px", color: "var(--text-primary)", lineHeight: "1.3", flex: 1 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "6px" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", lineHeight: "1.35", flex: 1 }}>
         {job.title || "Untitled"}
       </div>
       <button
         onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onEdit(job); }}
-        style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", flexShrink: 0, lineHeight: "16px" }}
+        style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "3px 9px", fontSize: "11px", flexShrink: 0, lineHeight: "16px" }}
       >Edit</button>
     </div>
-    {job.companyId && <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "6px" }}>{coName(job.companyId)}</div>}
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+    {job.companyId && <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "8px" }}>{coName(job.companyId)}</div>}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center" }}>
       {job.function && <Badge label={job.function} color="#64748b" />}
-      {job.resumeLink && <a href={job.resumeLink} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()} style={{ fontSize: "10px", color: "#3b82f6", textDecoration: "none" }}>↗ Resume</a>}
-      {job.coverLetterLink && <a href={job.coverLetterLink} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()} style={{ fontSize: "10px", color: "#3b82f6", textDecoration: "none" }}>↗ CL</a>}
+      {job.resumeLink && <a href={job.resumeLink} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()} style={{ fontSize: "11px", color: "#3b82f6", textDecoration: "none" }}>↗ Resume</a>}
+      {job.coverLetterLink && <a href={job.coverLetterLink} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()} style={{ fontSize: "11px", color: "#3b82f6", textDecoration: "none" }}>↗ CL</a>}
     </div>
   </div>
 );
@@ -330,7 +330,7 @@ const KanbanColumn = ({ status, jobs, coName, onEdit }) => {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const color = STATUS_COLORS[status] || "#71717a";
   return (
-    <div style={{ minWidth: "180px", flex: 1 }}>
+    <div style={{ minWidth: "190px", flex: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "10px" }}>
         <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: color, flexShrink: 0 }} />
         <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{status}</span>
@@ -371,7 +371,7 @@ const KanbanBoard = ({ jobs, coName, onEdit, onStatusChange }) => {
       </div>
       <DragOverlay dropAnimation={null}>
         {activeJob ? (
-          <div style={{ opacity: 0.92, cursor: "grabbing", width: "180px" }}>
+          <div style={{ opacity: 0.92, cursor: "grabbing", width: "190px" }}>
             <KanbanCardInner job={activeJob} coName={coName} onEdit={() => {}} />
           </div>
         ) : null}
@@ -1687,7 +1687,7 @@ export default function App() {
       </div>
 
       {/* Content */}
-      <div className="mobile-content-pad" style={{ padding: "28px", maxWidth: "1100px" }}>
+      <div className="mobile-content-pad" style={{ padding: "28px", maxWidth: "1400px" }}>
         {tab === "dashboard" && <DashboardTab data={data} setData={supabaseSetData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
         {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
         {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
