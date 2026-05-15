@@ -124,12 +124,12 @@ const Textarea = ({ label, value, onChange }) => (
 // ─── MODAL ────────────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
   <div onClick={onClose} style={{
-    position: "fixed", inset: 0, background: "var(--overlay)", zIndex: 100,
+    position: "fixed", inset: 0, background: "var(--overlay)", zIndex: 200,
     display: "flex", alignItems: "center", justifyContent: "center",
   }}>
-    <div onClick={e => e.stopPropagation()} style={{
+    <div onClick={e => e.stopPropagation()} className="modal-inner" style={{
       background: "var(--modal-bg)", border: "1px solid var(--border)", borderRadius: "12px",
-      width: "480px", maxHeight: "85vh", overflow: "auto", padding: "28px",
+      width: "min(480px, calc(100vw - 32px))", maxHeight: "85vh", overflow: "auto", padding: "28px",
       boxShadow: "0 25px 60px #000a",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px" }}>

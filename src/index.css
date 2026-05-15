@@ -77,4 +77,8 @@ tbody tr:hover {
 
   .table-desktop { display: none !important; }
   .table-mobile  { display: block !important; }
+
+  .modal-inner {
+    padding: 20px !important;
+  }
 }
