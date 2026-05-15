@@ -75,6 +75,6 @@ tbody tr:hover {
     box-sizing: border-box;
   }
 
-  .table-desktop { display: none; }
-  .table-mobile  { display: block; }
+  .table-desktop { display: none !important; }
+  .table-mobile  { display: block !important; }
 }
