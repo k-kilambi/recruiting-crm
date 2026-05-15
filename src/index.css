@@ -1,41 +1,23 @@
 :root {
-  /* Light mode — Notion-style warm whites */
-  --bg:             #ffffff;
-  --surface:        #f7f6f3;
-  --surface-raised: #efede9;
-  --border:         #e3e1db;
-  --border-subtle:  #eeece8;
-  --text-primary:   #191919;
-  --text-secondary: #6b6b6b;
-  --text-tertiary:  #9b9b9b;
-  --input-bg:       #f7f6f3;
-  --input-border:   #d8d5cf;
+  --bg:             #F4FAFF;
+  --surface:        #EBF2F2;
+  --surface-raised: #DEE7E7;
+  --border:         #C8D6D6;
+  --border-subtle:  #DEE7E7;
+  --text-primary:   #1e2122;
+  --text-secondary: #535657;
+  --text-tertiary:  #7d8f94;
+  --input-bg:       #ffffff;
+  --input-border:   #C8D6D6;
   --modal-bg:       #ffffff;
-  --overlay:        rgba(0, 0, 0, 0.35);
-  --stripe:         rgba(0, 0, 0, 0.018);
+  --overlay:        rgba(30, 33, 34, 0.4);
+  --stripe:         rgba(183, 173, 207, 0.05);
+  --accent:         #4F646F;
+  --accent-soft:    #B7ADCF;
 
-  color-scheme: light dark;
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark mode — warm near-black, not cold navy */
-    --bg:             #191919;
-    --surface:        #212121;
-    --surface-raised: #282828;
-    --border:         #333333;
-    --border-subtle:  #2a2a2a;
-    --text-primary:   #ebebeb;
-    --text-secondary: #888888;
-    --text-tertiary:  #555555;
-    --input-bg:       #1c1c1c;
-    --input-border:   #333333;
-    --modal-bg:       #212121;
-    --overlay:        rgba(0, 0, 0, 0.6);
-    --stripe:         rgba(255, 255, 255, 0.02);
-  }
 }
 
 body {
