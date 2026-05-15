@@ -49,6 +49,16 @@ const Badge = ({ label, color }) => (
   }}>{label}</span>
 );
 
+const TabIcon = ({ id }) => {
+  const s = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (id === "dashboard") return <svg {...s}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+  if (id === "companies") return <svg {...s}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+  if (id === "jobs") return <svg {...s}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>;
+  if (id === "contacts") return <svg {...s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+  if (id === "outreach") return <svg {...s}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+  return null;
+};
+
 const Input = ({ label, value, onChange, type = "text", placeholder = "" }) => (
   <div style={{ marginBottom: "14px" }}>
     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>{label}</label>
@@ -1446,17 +1456,19 @@ export default function App() {
             <span style={{ color: "#000", fontSize: "14px", fontWeight: 800 }}>R</span>
           </div>
           <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", letterSpacing: "0.02em" }}>recruiting.crm</span>
-          <span style={{ fontSize: "10px", color: "var(--border)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
+          <span className="header-version" style={{ fontSize: "10px", color: "var(--border)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
-          <button onClick={exportData} style={{ background: "transparent", border: "1px solid #f59e0b55", color: "#f59e0b", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
+          <div className="header-data-btns">
+            <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
+            <button onClick={exportData} style={{ background: "transparent", border: "1px solid #f59e0b55", color: "#f59e0b", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
+          </div>
           <button onClick={() => supabase.auth.signOut()} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>SIGN OUT</button>
         </div>
       </div>
 
       {/* Nav */}
-      <div style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", display: "flex", gap: "0" }}>
+      <div className="desktop-nav" style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", gap: "0" }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             background: tab === t.id ? t.color + "12" : "none",
@@ -1471,7 +1483,7 @@ export default function App() {
       </div>
 
       {/* Content */}
-      <div style={{ padding: "28px", maxWidth: "1100px" }}>
+      <div className="mobile-content-pad" style={{ padding: "28px", maxWidth: "1100px" }}>
         {tab === "dashboard" && <DashboardTab data={data} setData={supabaseSetData} onEditOutreach={openDashOutreach} onEditJob={j => setDashJobModal(j)} />}
         {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
         {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
@@ -1550,6 +1562,33 @@ export default function App() {
           <button onClick={importData} style={{ width: "100%", background: "#f59e0b", color: "#000", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "12px" }}>LOAD DATA</button>
         </Modal>
       )}
+
+      {/* Mobile Bottom Nav */}
+      <div className="mobile-bottom-nav">
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "3px",
+            background: "none",
+            border: "none",
+            borderTop: `2px solid ${tab === t.id ? t.color : "transparent"}`,
+            cursor: "pointer",
+            color: tab === t.id ? t.color : "var(--text-tertiary)",
+            padding: "8px 4px",
+            fontSize: "9px",
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+          }}>
+            <TabIcon id={t.id} />
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       <Toast message={toast} onClose={() => setToast(null)} />
     </div>
