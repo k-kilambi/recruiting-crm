@@ -42,6 +42,33 @@ tbody tr:hover {
   filter: brightness(0.88);
 }
 
+.dash-action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dash-action-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .dash-action-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .dash-action-meta {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-left: 40px;
+    flex-shrink: unset;
+  }
+}
+
 /* ── Responsive navigation ───────────────────────────────────────────────── */
 .desktop-nav {
   display: flex;
