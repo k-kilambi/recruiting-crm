@@ -54,6 +54,7 @@ tbody tr:hover {
   .desktop-nav    { display: none; }
   .header-data-btns { display: none; }
   .header-version { display: none; }
+  .board-toggle   { display: none !important; }
 
   .mobile-bottom-nav {
     display: flex;

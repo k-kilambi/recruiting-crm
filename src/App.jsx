@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import { DndContext, DragOverlay, useDraggable, useDroppable, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const genId = () => 'new_' + Math.random().toString(36).slice(2, 9);
@@ -291,6 +292,94 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
   );
 };
 
+// ─── KANBAN BOARD (Jobs) ──────────────────────────────────────────────────────
+const KanbanCardInner = ({ job, coName, onEdit }) => (
+  <div style={{
+    background: "var(--modal-bg)", border: "1px solid var(--border)", borderRadius: "8px",
+    padding: "10px 12px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", cursor: "grab",
+  }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "4px" }}>
+      <div style={{ fontWeight: 600, fontSize: "13px", color: "var(--text-primary)", lineHeight: "1.3", flex: 1 }}>
+        {job.title || "Untitled"}
+      </div>
+      <button
+        onPointerDown={e => e.stopPropagation()}
+        onClick={e => { e.stopPropagation(); onEdit(job); }}
+        style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "2px 7px", fontSize: "10px", flexShrink: 0, lineHeight: "16px" }}
+      >Edit</button>
+    </div>
+    {job.companyId && <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "6px" }}>{coName(job.companyId)}</div>}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+      {job.function && <Badge label={job.function} color="#64748b" />}
+      {job.resumeLink && <a href={job.resumeLink} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()} style={{ fontSize: "10px", color: "#3b82f6", textDecoration: "none" }}>↗ Resume</a>}
+      {job.coverLetterLink && <a href={job.coverLetterLink} target="_blank" rel="noreferrer" onPointerDown={e => e.stopPropagation()} style={{ fontSize: "10px", color: "#3b82f6", textDecoration: "none" }}>↗ CL</a>}
+    </div>
+  </div>
+);
+
+const KanbanCard = ({ job, coName, onEdit }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: job.id });
+  return (
+    <div ref={setNodeRef} {...attributes} {...listeners} style={{ opacity: isDragging ? 0 : 1, marginBottom: "8px", touchAction: "none" }}>
+      <KanbanCardInner job={job} coName={coName} onEdit={onEdit} />
+    </div>
+  );
+};
+
+const KanbanColumn = ({ status, jobs, coName, onEdit }) => {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const color = STATUS_COLORS[status] || "#71717a";
+  return (
+    <div style={{ minWidth: "180px", flex: 1 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "10px" }}>
+        <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: color, flexShrink: 0 }} />
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{status}</span>
+        <span style={{ fontSize: "11px", color: "var(--text-tertiary)", marginLeft: "auto" }}>{jobs.length}</span>
+      </div>
+      <div ref={setNodeRef} style={{
+        minHeight: "80px", borderRadius: "8px", padding: "4px",
+        background: isOver ? `${color}10` : "var(--surface)",
+        border: `1.5px dashed ${isOver ? color + "88" : "var(--border-subtle)"}`,
+        transition: "all 0.15s",
+      }}>
+        {jobs.map(job => <KanbanCard key={job.id} job={job} coName={coName} onEdit={onEdit} />)}
+      </div>
+    </div>
+  );
+};
+
+const KanbanBoard = ({ jobs, coName, onEdit, onStatusChange }) => {
+  const [activeId, setActiveId] = useState(null);
+  const activeJob = jobs.find(j => j.id === activeId);
+  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }));
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={({ active }) => setActiveId(active.id)}
+      onDragEnd={({ active, over }) => {
+        setActiveId(null);
+        if (over && active.id !== over.id && JOB_STATUSES.includes(over.id)) {
+          onStatusChange(active.id, over.id);
+        }
+      }}
+      onDragCancel={() => setActiveId(null)}
+    >
+      <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "16px" }}>
+        {JOB_STATUSES.map(status => (
+          <KanbanColumn key={status} status={status} jobs={jobs.filter(j => j.status === status)} coName={coName} onEdit={onEdit} />
+        ))}
+      </div>
+      <DragOverlay dropAnimation={null}>
+        {activeJob ? (
+          <div style={{ opacity: 0.92, cursor: "grabbing", width: "180px" }}>
+            <KanbanCardInner job={activeJob} coName={coName} onEdit={() => {}} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
+  );
+};
+
 // ─── JOBS TAB ─────────────────────────────────────────────────────────────────
 const emptyJob = () => ({ id: genId(), title: "", companyId: "", function: "", source: "", status: "Interested", dateAdded: new Date().toISOString().slice(0, 10), jdLink: "", resumeLink: "", coverLetterLink: "", notes: "" });
 
@@ -301,6 +390,16 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
   const [filter, setFilter] = useState("All");
   const [miniCompany, setMiniCompany] = useState(null);
   const [dupWarning, setDupWarning] = useState("");
+  const [boardView, setBoardView] = useState(true);
+
+  const toCamelJob = (j) => ({
+    ...j,
+    companyId: j.company_id,
+    dateAdded: j.date_added,
+    jdLink: j.jd_link,
+    resumeLink: j.resume_link,
+    coverLetterLink: j.cover_letter_link,
+  });
 
   const save = async (rec) => {
     const isNew = !rec.id || rec.id.startsWith("new_");
@@ -313,17 +412,23 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
     };
     if (isNew) {
       const { data: inserted, error } = await supabase.from("jobs").insert({ ...snake, user_id: userId }).select().single();
-      if (!error && inserted) setJobs(prev => [inserted, ...prev]);
+      if (!error && inserted) setJobs(prev => [toCamelJob(inserted), ...prev]);
       else { console.error("Job insert error:", error); onError("Failed to save job — please try again."); }
     } else {
       const { error } = await supabase.from("jobs").update(snake).eq("id", rec.id);
-      if (!error) setJobs(prev => prev.map(j => j.id === rec.id ? { ...j, ...snake, id: rec.id } : j));
+      if (!error) setJobs(prev => prev.map(j => j.id === rec.id ? toCamelJob({ ...j, ...snake, id: rec.id }) : j));
       else { console.error("Job update error:", error); onError("Failed to save job — please try again."); }
     }
     setModal(null);
   };
   const del = (id) => dbDelete("jobs", id, setJobs);
   const coName = (id) => data.companies.find(c => c.id === id)?.name || "—";
+
+  const handleStatusChange = async (jobId, newStatus) => {
+    const { error } = await supabase.from("jobs").update({ status: newStatus }).eq("id", jobId);
+    if (error) { onError("Failed to update status — please try again."); return; }
+    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
+  };
 
   const saveMiniCompany = async (co) => {
     const dup = data.companies.find(c => c.name.toLowerCase().trim() === co.name.toLowerCase().trim());
@@ -363,18 +468,74 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
         </div>
         <button onClick={() => { setModal(emptyJob()); setDupWarning(""); }} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD JOB</button>
       </div>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
-        {["All", ...JOB_STATUSES].map(s => (
-          <button key={s} onClick={() => setFilter(s)} style={{
-            background: filter === s ? "#4F646F18" : "transparent",
-            border: `1px solid ${filter === s ? "#4F646F" : "var(--border)"}`,
-            color: filter === s ? "#4F646F" : "var(--text-tertiary)",
+      {/* Board / Table toggle — hidden on mobile */}
+      <div className="board-toggle" style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        {[{ v: true, label: "Board" }, { v: false, label: "Table" }].map(({ v, label }) => (
+          <button key={label} onClick={() => setBoardView(v)} style={{
+            background: boardView === v ? "#4F646F18" : "transparent",
+            border: `1px solid ${boardView === v ? "#4F646F" : "var(--border)"}`,
+            color: boardView === v ? "#4F646F" : "var(--text-tertiary)",
             borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
             fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em",
-          }}>{s}</button>
+          }}>{label}</button>
         ))}
       </div>
-      <Table cols={cols} rows={filtered} onEdit={r => { setModal(r); setDupWarning(""); }} onDelete={del} />
+
+      {/* Filter bar — table view only */}
+      {!boardView && (
+        <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+          {["All", ...JOB_STATUSES].map(s => (
+            <button key={s} onClick={() => setFilter(s)} style={{
+              background: filter === s ? "#4F646F18" : "transparent",
+              border: `1px solid ${filter === s ? "#4F646F" : "var(--border)"}`,
+              color: filter === s ? "#4F646F" : "var(--text-tertiary)",
+              borderRadius: "5px", padding: "4px 12px", fontSize: "11px",
+              fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em",
+            }}>{s}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop: Kanban board */}
+      {boardView && (
+        <div className="table-desktop">
+          <KanbanBoard
+            jobs={data.jobs}
+            coName={coName}
+            onEdit={r => { setModal(r); setDupWarning(""); }}
+            onStatusChange={handleStatusChange}
+          />
+        </div>
+      )}
+
+      {/* Mobile cards — always visible on mobile regardless of view */}
+      {boardView && (
+        <div className="table-mobile">
+          {data.jobs.length === 0 && (
+            <div style={{ padding: "32px", textAlign: "center", color: "var(--text-tertiary)", fontSize: "13px" }}>No jobs yet — add one above</div>
+          )}
+          {data.jobs.map(job => (
+            <div key={job.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "14px 16px", marginBottom: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{job.title}</div>
+                  {job.companyId && <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>{coName(job.companyId)}</div>}
+                </div>
+                <button onClick={() => { setModal(job); setDupWarning(""); }} style={{ background: "none", border: "1px solid var(--border)", color: "var(--text-secondary)", cursor: "pointer", borderRadius: "4px", padding: "4px 10px", fontSize: "11px", flexShrink: 0 }}>Edit</button>
+              </div>
+              <div style={{ marginTop: "8px", display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                <Badge label={job.status} />
+                {job.function && <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{job.function}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Table view — desktop table + mobile cards via Table component */}
+      {!boardView && (
+        <Table cols={cols} rows={filtered} onEdit={r => { setModal(r); setDupWarning(""); }} onDelete={del} />
+      )}
 
       {/* Job Modal */}
       {modal && !miniCompany && (
@@ -1329,7 +1490,14 @@ export default function App() {
         supabase.from("action_items").select("*").order("created_at", { ascending: false }),
       ]);
       setCompanies(co.data || []);
-      setJobs(jo.data || []);
+      setJobs((jo.data || []).map(j => ({
+        ...j,
+        companyId: j.company_id,
+        dateAdded: j.date_added,
+        jdLink: j.jd_link,
+        resumeLink: j.resume_link,
+        coverLetterLink: j.cover_letter_link,
+      })));
       setContacts(ct.data || []);
       setOutreach((ou.data || []).map(o => ({ ...o, contactId: o.contact_id, jobId: o.job_id, draftReady: o.draft_ready })));
       setActionItems((ai.data || []).map(a => ({
