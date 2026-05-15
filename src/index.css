@@ -33,6 +33,15 @@ tbody tr:hover {
   cursor: pointer;
 }
 
+.btn-click {
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.btn-click:active:not(:disabled) {
+  transform: scale(0.96);
+  filter: brightness(0.88);
+}
+
 /* ── Responsive navigation ───────────────────────────────────────────────── */
 .desktop-nav {
   display: flex;

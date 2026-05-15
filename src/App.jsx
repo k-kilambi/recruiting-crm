@@ -287,7 +287,7 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
               }}>{label}</button>
             ))}
           </div>
-          <button onClick={() => setModal(emptyCompany())} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>+ ADD COMPANY</button>
+          <button onClick={() => setModal(emptyCompany())} className="btn-click" style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer", letterSpacing: "0.04em" }}>+ ADD COMPANY</button>
         </div>
       </div>
 
@@ -324,7 +324,7 @@ const CompaniesTab = ({ data, setData, dbSave, dbDelete, setCompanies, onError, 
           <Select label="Stage" value={modal.stage} onChange={v => setModal(m => ({ ...m, stage: v }))} options={STAGES} />
           <Input label="Website" value={modal.website} onChange={v => setModal(m => ({ ...m, website: v }))} />
           <Textarea label="Notes" value={modal.notes} onChange={v => setModal(m => ({ ...m, notes: v }))} />
-          <button onClick={() => save(modal)} style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
+          <button onClick={() => save(modal)} className="btn-click" style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
         </Modal>
       )}
     </div>
@@ -505,7 +505,7 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
           <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Jobs</div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.jobs.length} tracked</div>
         </div>
-        <button onClick={() => { setModal(emptyJob()); setDupWarning(""); }} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD JOB</button>
+        <button onClick={() => { setModal(emptyJob()); setDupWarning(""); }} className="btn-click" style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD JOB</button>
       </div>
       {/* Board / Table toggle — hidden on mobile */}
       <div className="board-toggle" style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
@@ -604,7 +604,7 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
           <Input label="Resume (Google Drive URL)" value={modal.resumeLink} onChange={v => setModal(m => ({ ...m, resumeLink: v }))} placeholder="https://drive.google.com/..." />
           <Input label="Cover Letter (Google Drive URL)" value={modal.coverLetterLink} onChange={v => setModal(m => ({ ...m, coverLetterLink: v }))} placeholder="https://drive.google.com/..." />
           <Textarea label="Notes" value={modal.notes} onChange={v => setModal(m => ({ ...m, notes: v }))} />
-          <button onClick={() => save(modal)} style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
+          <button onClick={() => save(modal)} className="btn-click" style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
         </Modal>
       )}
 
@@ -621,7 +621,7 @@ const JobsTab = ({ data, setData, dbSave, dbDelete, setJobs, setCompanies, onErr
               Cancel
             </button>
             <button onClick={() => { if (miniCompany.name.trim()) saveMiniCompany(miniCompany); }}
-              style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+              className="btn-click" style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
               SAVE & RETURN TO JOB
             </button>
           </div>
@@ -772,7 +772,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
           <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Contacts</div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.contacts.length} tracked</div>
         </div>
-        <button onClick={() => { setModal(emptyContact()); setDupWarning(""); }} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD CONTACT</button>
+        <button onClick={() => { setModal(emptyContact()); setDupWarning(""); }} className="btn-click" style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD CONTACT</button>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "8px", flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -927,7 +927,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
             )}
           </div>
 
-          <button onClick={() => save(modal)} style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "16px" }}>SAVE</button>
+          <button onClick={() => save(modal)} className="btn-click" style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "16px" }}>SAVE</button>
         </Modal>
       )}
 
@@ -944,7 +944,7 @@ const ContactsTab = ({ data, setData, dbSave, dbDelete, setContacts, setCompanie
               Cancel
             </button>
             <button onClick={() => { if (miniCompany.name.trim()) saveMiniCompany(miniCompany); }}
-              style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+              className="btn-click" style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
               SAVE & RETURN TO CONTACT
             </button>
           </div>
@@ -972,6 +972,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
   const [dupCompanyWarning, setDupCompanyWarning] = useState("");
   const [showActions, setShowActions] = useState(false);
   const [pendingActions, setPendingActions] = useState([]);
+  const [savingContact, setSavingContact] = useState(false);
   const [feedView, setFeedView] = useState(true);
 
   const save = async (rec) => {
@@ -1039,11 +1040,14 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
   const actionCount = (outreachId) => (data.actionItems || []).filter(a => a.outreachId === outreachId && !a.done).length;
 
   const saveMiniContact = async (ct) => {
+    if (savingContact) return;
+    setSavingContact(true);
     const dup = data.contacts.find(c => c.name.toLowerCase().trim() === ct.name.toLowerCase().trim());
     if (dup) {
       setDupWarning(`"${dup.name}" already exists. Selecting them instead.`);
       setModal(m => ({ ...m, contactId: dup.id }));
       setMiniContact(null);
+      setSavingContact(false);
       return;
     }
     const { data: inserted } = await supabase.from("contacts").insert({ name: ct.name, company_id: ct.companyId || null, title: ct.title, contact_type: [], how_known: "Cold", user_id: userId }).select().single();
@@ -1053,6 +1057,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
     }
     setMiniContact(null);
     setDupWarning("");
+    setSavingContact(false);
   };
 
   const saveMiniCompanyFromContact = async (co) => {
@@ -1098,7 +1103,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
           <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Outreach</div>
           <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{data.outreach.length} touchpoints</div>
         </div>
-        <button onClick={() => { setModal(emptyOutreach()); setDupWarning(""); setPendingActions([]); setShowActions(false); }} style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD OUTREACH</button>
+        <button onClick={() => { setModal(emptyOutreach()); setDupWarning(""); setPendingActions([]); setShowActions(false); }} className="btn-click" style={{ background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "9px 16px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>+ ADD OUTREACH</button>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "8px", flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -1268,7 +1273,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
             )}
           </div>
 
-          <button onClick={() => save(modal)} style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "16px" }}>SAVE</button>
+          <button onClick={() => save(modal)} className="btn-click" style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "16px" }}>SAVE</button>
         </Modal>
       )}
 
@@ -1297,8 +1302,10 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
               Cancel
             </button>
             <button onClick={() => { if (miniContact.name.trim()) saveMiniContact(miniContact); }}
-              style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
-              SAVE & RETURN TO OUTREACH
+              disabled={savingContact}
+              className="btn-click"
+              style={{ flex: 2, background: savingContact ? "#94a3b8" : "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: savingContact ? "not-allowed" : "pointer" }}>
+              {savingContact ? "SAVING..." : "SAVE & RETURN TO OUTREACH"}
             </button>
           </div>
         </Modal>
@@ -1320,7 +1327,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
               Cancel
             </button>
             <button onClick={() => { if (miniCompanyFromContact.name.trim()) saveMiniCompanyFromContact(miniCompanyFromContact); }}
-              style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+              className="btn-click" style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
               SAVE & RETURN TO CONTACT
             </button>
           </div>
@@ -1897,7 +1904,7 @@ export default function App() {
               </div>
             )}
           </div>
-          <button onClick={() => saveDashOutreach(dashOutreachModal)} style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "16px" }}>SAVE</button>
+          <button onClick={() => saveDashOutreach(dashOutreachModal)} className="btn-click" style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "16px" }}>SAVE</button>
         </Modal>
       )}
 
@@ -1912,7 +1919,7 @@ export default function App() {
           <Input label="Resume (Google Drive URL)" value={dashJobModal.resumeLink || ""} onChange={v => setDashJobModal(m => ({ ...m, resumeLink: v }))} placeholder="https://drive.google.com/..." />
           <Input label="Cover Letter (Google Drive URL)" value={dashJobModal.coverLetterLink || ""} onChange={v => setDashJobModal(m => ({ ...m, coverLetterLink: v }))} placeholder="https://drive.google.com/..." />
           <Textarea label="Notes" value={dashJobModal.notes || ""} onChange={v => setDashJobModal(m => ({ ...m, notes: v }))} />
-          <button onClick={() => saveDashJob(dashJobModal)} style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
+          <button onClick={() => saveDashJob(dashJobModal)} className="btn-click" style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer", marginTop: "6px" }}>SAVE</button>
         </Modal>
       )}
 
