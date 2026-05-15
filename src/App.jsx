@@ -1468,14 +1468,14 @@ export default function App() {
       </div>
 
       {/* Nav */}
-      <div className="desktop-nav" style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", gap: "0" }}>
+      <div className="desktop-nav" style={{ background: "var(--bg)", borderBottom: "1px solid var(--border)", padding: "0 28px", gap: "0" }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
-            background: tab === t.id ? t.color + "12" : "none",
+            background: "none",
             border: "none", cursor: "pointer",
             padding: "14px 18px", fontSize: "12px", fontWeight: 600,
-            color: tab === t.id ? t.color : t.color + "66",
-            borderBottom: `2px solid ${tab === t.id ? t.color : t.color + "33"}`,
+            color: tab === t.id ? t.color : "var(--text-tertiary)",
+            borderBottom: `2px solid ${tab === t.id ? t.color : "transparent"}`,
             letterSpacing: "0.04em", textTransform: "uppercase",
             transition: "color 0.15s",
           }}>{t.label}</button>
