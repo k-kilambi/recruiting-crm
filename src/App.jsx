@@ -229,7 +229,6 @@ const Table = ({ cols, rows, onEdit, onDelete }) => (
       ))}
     </div>
   </>
-)
 );
 
 // ─── COMPANIES TAB ────────────────────────────────────────────────────────────
