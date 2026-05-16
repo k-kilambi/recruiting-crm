@@ -963,13 +963,15 @@ const EFFORTS = ["L", "M", "H"];
 const PRIORITY_COLORS = { L: "#71717a", M: "#f59e0b", H: "#ef4444" };
 const EFFORT_COLORS = { L: "#10b981", M: "#f59e0b", H: "#ef4444" };
 
-const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setActionItems, onError, userId }) => {
+const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setCompanies, setJobs, setActionItems, onError, userId }) => {
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState("All");
   const [miniContact, setMiniContact] = useState(null);
   const [miniCompanyFromContact, setMiniCompanyFromContact] = useState(null);
+  const [miniJob, setMiniJob] = useState(null);
   const [dupWarning, setDupWarning] = useState("");
   const [dupCompanyWarning, setDupCompanyWarning] = useState("");
+  const [dupJobWarning, setDupJobWarning] = useState("");
   const [showActions, setShowActions] = useState(false);
   const [pendingActions, setPendingActions] = useState([]);
   const [savingContact, setSavingContact] = useState(false);
@@ -1070,11 +1072,28 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
     }
     const { data: inserted } = await supabase.from("companies").insert({ name: co.name, vertical: co.vertical, stage: co.stage, user_id: userId }).select().single();
     if (inserted) {
-      setContacts(prev => prev);
+      setCompanies(prev => [inserted, ...prev]);
       setMiniContact(m => ({ ...m, companyId: inserted.id }));
     }
     setMiniCompanyFromContact(null);
     setDupCompanyWarning("");
+  };
+
+  const saveMiniJob = async (job) => {
+    const dup = data.jobs.find(j => j.title.toLowerCase().trim() === job.title.toLowerCase().trim());
+    if (dup) {
+      setDupJobWarning(`"${dup.title}" already exists. Selecting it instead.`);
+      setModal(m => ({ ...m, jobId: dup.id }));
+      setMiniJob(null);
+      return;
+    }
+    const { data: inserted } = await supabase.from("jobs").insert({ title: job.title, company_id: job.companyId || null, status: job.status, date_added: new Date().toISOString().slice(0, 10), user_id: userId }).select().single();
+    if (inserted) {
+      setJobs(prev => [{ ...inserted, companyId: inserted.company_id, dateAdded: inserted.date_added, jdLink: inserted.jd_link, resumeLink: inserted.resume_link, coverLetterLink: inserted.cover_letter_link }, ...prev]);
+      setModal(m => ({ ...m, jobId: inserted.id }));
+    }
+    setMiniJob(null);
+    setDupJobWarning("");
   };
 
   const filtered = filter === "All" ? data.outreach : data.outreach.filter(o => o.status === filter);
@@ -1187,7 +1206,7 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
       {!feedView && <Table cols={cols} rows={sorted} onEdit={openModal} onDelete={del} />}
 
       {/* Outreach Modal */}
-      {modal && !miniContact && (
+      {modal && !miniContact && !miniJob && (
         <Modal title="Outreach Entry" onClose={() => { setModal(null); setPendingActions([]); setShowActions(false); }}>
           <div style={{ marginBottom: "14px" }}>
             <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Contact</label>
@@ -1204,11 +1223,16 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
           </div>
           <div style={{ marginBottom: "14px" }}>
             <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Related Job (optional)</label>
-            <select value={modal.jobId} onChange={e => setModal(m => ({ ...m, jobId: e.target.value }))}
+            <select value={modal.jobId} onChange={e => { setModal(m => ({ ...m, jobId: e.target.value })); setDupJobWarning(""); }}
               style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
               <option value="">— none —</option>
               {data.jobs.map(j => <option key={j.id} value={j.id}>{jobTitle(j.id)}</option>)}
             </select>
+            <button onClick={() => setMiniJob({ title: "", companyId: "", status: "Interested" })}
+              style={{ marginTop: "6px", background: "transparent", border: "1px dashed #334155", color: "var(--text-tertiary)", borderRadius: "5px", padding: "5px 10px", fontSize: "11px", cursor: "pointer", width: "100%" }}>
+              + Add New Job
+            </button>
+            {dupJobWarning && <div style={{ marginTop: "6px", fontSize: "11px", color: "#4F646F" }}>⚠ {dupJobWarning}</div>}
           </div>
           <Select label="Channel" value={modal.channel} onChange={v => setModal(m => ({ ...m, channel: v }))} options={CHANNELS} />
           <Select label="Direction" value={modal.direction} onChange={v => setModal(m => ({ ...m, direction: v }))} options={DIRECTIONS} />
@@ -1329,6 +1353,36 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
             <button onClick={() => { if (miniCompanyFromContact.name.trim()) saveMiniCompanyFromContact(miniCompanyFromContact); }}
               className="btn-click" style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
               SAVE & RETURN TO CONTACT
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Mini Job Modal */}
+      {miniJob && (
+        <Modal title="Quick Add Job" onClose={() => setMiniJob(null)}>
+          <p style={{ color: "var(--text-tertiary)", fontSize: "12px", marginTop: 0 }}>Add the basics now — fill in the rest from the Jobs tab later.</p>
+          <div style={{ marginBottom: "10px", padding: "8px 12px", background: "var(--input-bg)", borderRadius: "6px", fontSize: "11px", color: "var(--text-tertiary)" }}>
+            📍 Outreach → <span style={{ color: "#4F646F" }}>New Job</span>
+          </div>
+          <Input label="Job Title *" value={miniJob.title} onChange={v => setMiniJob(m => ({ ...m, title: v }))} />
+          <div style={{ marginBottom: "14px" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Company (optional)</label>
+            <select value={miniJob.companyId} onChange={e => setMiniJob(m => ({ ...m, companyId: e.target.value }))}
+              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", outline: "none" }}>
+              <option value="">— select company —</option>
+              {data.companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <Select label="Status" value={miniJob.status} onChange={v => setMiniJob(m => ({ ...m, status: v }))} options={JOB_STATUSES} />
+          <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+            <button onClick={() => setMiniJob(null)}
+              style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+              Cancel
+            </button>
+            <button onClick={() => { if (miniJob.title.trim()) saveMiniJob(miniJob); }}
+              className="btn-click" style={{ flex: 2, background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}>
+              SAVE & RETURN TO OUTREACH
             </button>
           </div>
         </Modal>
@@ -1892,7 +1946,7 @@ export default function App() {
         {tab === "companies" && <CompaniesTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
         {tab === "jobs" && <JobsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setJobs={setJobs} setCompanies={setCompanies} onError={showError} userId={session.user.id} />}
         {tab === "contacts" && <ContactsTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setContacts={setContacts} setCompanies={setCompanies} setActionItems={setActionItems} onError={showError} userId={session.user.id} />}
-        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setActionItems={setActionItems} onError={showError} userId={session.user.id} />}
+        {tab === "outreach" && <OutreachTab data={data} setData={supabaseSetData} dbSave={dbSave} dbDelete={dbDelete} setOutreach={setOutreach} setContacts={setContacts} setCompanies={setCompanies} setJobs={setJobs} setActionItems={setActionItems} onError={showError} userId={session.user.id} />}
       </div>
 
       {/* Dashboard Outreach Modal */}
