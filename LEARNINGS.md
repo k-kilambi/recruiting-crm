@@ -366,6 +366,61 @@ The `!important` is required because inline styles have higher CSS specificity t
 
 ---
 
+## Stage 5 Learnings — Natural Language AI Input
+
+---
+
+### Insight 27: A Vercel serverless function is a secure middleman for API keys
+
+**The trigger:** Needing to call the Claude API from a frontend-only app without exposing the API key in the browser.
+
+**The concept:** Any JavaScript running in the browser is visible to anyone who opens DevTools — including API keys. A Vercel serverless function is a small backend function that lives on Vercel's servers, not in the browser. The frontend calls it like a normal URL (`/api/parse-nlp`), the function calls Claude using the key stored in Vercel's environment settings, and returns the result. The key never touches the browser.
+
+**The pattern:**
+```
+Browser → your Vercel function (/api/parse-nlp) → Claude API
+```
+
+**Why not just call Claude directly from the browser?** Your Anthropic API key would be readable by anyone who opens the Network tab in DevTools. For a personal tool, it's low risk — but it's also bad practice and could lead to unexpected charges if someone grabbed the key.
+
+**The rule:** Any secret (API key, database credentials, OAuth secret) that needs to be used at runtime must live in a server-side environment, never in browser code.
+
+---
+
+### Insight 28: Claude's job in this flow is English → JSON, nothing more
+
+**The trigger:** Clarifying how Claude "triggers" Supabase inserts.
+
+**The concept:** Claude doesn't trigger anything. It reads a natural language string and returns a structured JSON object describing what to create. That JSON sits in React state. The user sees a preview. Only when "Confirm & Save All" is clicked does the app read that JSON and fire Supabase INSERT calls.
+
+**Claude's actual role:** A very smart text parser. Input: your note in plain English. Output: a JSON string describing records to create. It has no connection to Supabase, no access to your database, and can't trigger any action.
+
+**Your words:** *"So it goes to Claude, Claude parses it, passes back a JSON that includes an API trigger call to Supabase"* — not quite. The JSON is just a description. The app decides what to do with it. The button is what connects Claude's output to Supabase's input. The JSON could just as easily be thrown in the trash.
+
+**The broader principle:** LLMs are text-in, text-out. "Agentic" AI (where Claude actually takes actions) requires the app to explicitly give it tools and act on its decisions. In this feature, the human is still the agent — Claude just structures the input.
+
+---
+
+### Insight 29: Sequential database inserts when foreign keys create dependencies
+
+**The trigger:** Saving multiple linked records (company → contact → outreach → action item) from a single Claude response.
+
+**The concept:** Relational databases require you to insert parent records before child records, because children reference the parent's ID. You can't insert a contact with `company_id` until you know what ID the company got. This means some inserts must be sequential — each one waits for the previous to finish and captures its returned ID.
+
+**The pattern:**
+```
+INSERT company → capture companyId
+INSERT contact (using companyId) → capture contactId
+INSERT outreach (using contactId) → capture outreachId
+INSERT action_item (using outreachId)
+```
+
+**Why `RETURNING *` matters:** Every Supabase insert uses `.select().single()` at the end, which tells Postgres to return the full inserted row. That's how we get the UUID back — we didn't assign it, Postgres did. Capturing it immediately after each insert is what makes the next insert possible.
+
+**The gotcha:** If any step fails mid-sequence, later records won't have the IDs they need. There's no automatic rollback — partial saves are possible. For a personal tool this is acceptable; production apps handle this with database transactions.
+
+---
+
 ## Project Decisions Log
 
 | # | Decision | Rationale | Insight |
@@ -383,6 +438,9 @@ The `!important` is required because inline styles have higher CSS specificity t
 | 11 | Resend for email delivery (vs. Supabase built-in) | Built-in is rate-limited and not production-grade; Resend free tier handles real usage | Insight 21 |
 | 12 | RLS enforced at DB level with user_id on all tables | App-level auth alone is insufficient; DB-level isolation means bypassing the frontend still can't expose other users' data | Insight 19 |
 | 13 | UI polish (kanban, card grids, feed view) before Stage 4 AI features | Daily-use tool benefits from good UX; bounded scope; cleaner mental model before building the AI layer | Insight 26 |
+| 14 | Vercel serverless function for Claude API calls (vs. direct browser call) | API keys must never be exposed in browser code; `/api/parse-nlp.js` is a secure middleman | Insight 27 |
+| 15 | Preview/confirm step before saving Claude's output | Claude can misparse; human-in-the-loop before any DB write prevents bad data. Also pedagogically useful — shows what will be created | — |
+| 16 | Claude returns JSON only; app handles all Supabase calls | Clean separation of concerns. Claude is a parser, not an agent. Keeps the data flow explicit and reversible | Insight 28 |
 
 ---
 
@@ -400,7 +458,7 @@ The `!important` is required because inline styles have higher CSS specificity t
 - Stage 1: Designed data model from scratch (entities vs. roles, relational linking, query-first design). Built interactive prototype as a React artifact. Validated through real use during MBA internship search.
 - Stage 2: Local dev environment, GitHub, Supabase, Vercel. Data now persists across sessions.
 - Stage 3: Multi-user auth with per-user data isolation. Magic link authentication via Supabase Auth, Row Level Security at the database level, Resend for production email delivery. Each user sees only their own data — enforced in the database, not just the UI.
-- Stage 4 (planned): AI layer — outreach draft generation and follow-up suggestions using Claude API.
+- Stage 5: Natural language CRM input — "AI Add" button lets you describe an interaction in plain English. Claude parses it into structured JSON (company, contact, outreach, action items), previews the records for confirmation, then saves them to Supabase in dependency order. Claude API key secured via Vercel serverless function.
 
 **Key design decisions documented:**
 - Unified Contact table (entities not roles)
