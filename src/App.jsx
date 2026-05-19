@@ -1715,6 +1715,13 @@ export default function App() {
   const [dashOutreachActions, setDashOutreachActions] = useState([]);
   const [dashShowActions, setDashShowActions] = useState(false);
 
+  // ── Quick Add (natural language) state ───────────────────────────────────────
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddText, setQuickAddText] = useState("");
+  const [quickAddLoading, setQuickAddLoading] = useState(false);
+  const [quickAddResult, setQuickAddResult] = useState(null);
+  const [quickAddSaving, setQuickAddSaving] = useState(false);
+
   // ── Build data object for child components ───────────────────────────────────
   const data = { companies, jobs, contacts, outreach, actionItems };
   const setData = (updater) => {
@@ -1846,6 +1853,117 @@ export default function App() {
     setDashJobModal(null);
   };
 
+  // ── Quick Add handlers ────────────────────────────────────────────────────────
+  const parseQuickAdd = async () => {
+    if (!quickAddText.trim()) return;
+    setQuickAddLoading(true);
+    setQuickAddResult(null);
+    try {
+      const res = await fetch("/api/parse-nlp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: quickAddText,
+          currentDate: new Date().toISOString().slice(0, 10),
+          existingCompanies: companies.map(c => ({ id: c.id, name: c.name })),
+          existingContacts: contacts.map(c => ({ id: c.id, name: c.name })),
+          existingJobs: jobs.map(j => ({ id: j.id, title: j.title, company: companies.find(c => c.id === j.companyId)?.name || "" })),
+        }),
+      });
+      if (!res.ok) throw new Error("API error");
+      const result = await res.json();
+      if (result.error) throw new Error(result.error);
+      setQuickAddResult(result);
+    } catch (err) {
+      showError("Failed to parse — make sure the app is deployed or run via vercel dev locally.");
+    }
+    setQuickAddLoading(false);
+  };
+
+  const saveQuickAdd = async () => {
+    if (!quickAddResult?.records) return;
+    setQuickAddSaving(true);
+    let companyId = null;
+    let contactId = null;
+    let outreachId = null;
+    try {
+      for (const record of quickAddResult.records) {
+        if (record.type === "company") {
+          if (record.action === "existing") { companyId = record.existingId; continue; }
+          const { data, error } = await supabase.from("companies").insert({
+            name: record.data.name, vertical: record.data.vertical || "Other",
+            stage: record.data.stage || "N/A", website: record.data.website || null,
+            notes: record.data.notes || null, user_id: session.user.id,
+          }).select().single();
+          if (error) throw error;
+          companyId = data.id;
+          setCompanies(prev => [toCamel(data), ...prev]);
+        }
+
+        if (record.type === "contact") {
+          if (record.action === "existing") { contactId = record.existingId; continue; }
+          const resolvedCompanyId = companyId
+            || companies.find(c => c.name.toLowerCase() === record.data.companyName?.toLowerCase())?.id
+            || null;
+          const { data, error } = await supabase.from("contacts").insert({
+            name: record.data.name, company_id: resolvedCompanyId,
+            title: record.data.title || null,
+            contact_type: record.data.contactType || ["Target"],
+            how_known: record.data.howKnown || "Cold",
+            linkedin: record.data.linkedin || null, email: record.data.email || null,
+            notes: record.data.notes || null, user_id: session.user.id,
+          }).select().single();
+          if (error) throw error;
+          contactId = data.id;
+          setContacts(prev => [toCamel(data), ...prev]);
+        }
+
+        if (record.type === "outreach") {
+          if (record.action === "existing") { outreachId = record.existingId; continue; }
+          const resolvedContactId = contactId
+            || contacts.find(c => c.name.toLowerCase() === record.data.contactName?.toLowerCase())?.id
+            || null;
+          const { data, error } = await supabase.from("outreach").insert({
+            contact_id: resolvedContactId, job_id: null,
+            channel: record.data.channel, direction: record.data.direction,
+            date: record.data.date, summary: record.data.summary,
+            status: record.data.status || "Sent",
+            draft_ready: false, notes: record.data.notes || null,
+            user_id: session.user.id,
+          }).select().single();
+          if (error) throw error;
+          outreachId = data.id;
+          setOutreach(prev => [toCamel(data), ...prev]);
+        }
+
+        if (record.type === "action_item") {
+          const resolvedOutreachId = record.data.linkedTo === "outreach" ? outreachId : null;
+          const resolvedContactId = record.data.linkedTo === "contact"
+            ? (contactId || contacts.find(c => c.name.toLowerCase() === record.data.linkedName?.toLowerCase())?.id || null)
+            : null;
+          const { data, error } = await supabase.from("action_items").insert({
+            outreach_id: resolvedOutreachId, contact_id: resolvedContactId,
+            description: record.data.description,
+            priority: record.data.priority || "M",
+            effort: record.data.effort || "M",
+            done: false, backlog: false,
+            due_date: record.data.dueDate || null,
+            user_id: session.user.id,
+          }).select().single();
+          if (error) throw error;
+          setActionItems(prev => [toCamel(data), ...prev]);
+        }
+      }
+      setQuickAddOpen(false);
+      setQuickAddText("");
+      setQuickAddResult(null);
+    } catch (err) {
+      console.error("Quick add save error:", err);
+      showError("Failed to save some records — please check and try again.");
+    }
+    setQuickAddSaving(false);
+  };
+
   // ── Export / Import ───────────────────────────────────────────────────────────
   const exportData = () => setShowExport(true);
   const exportJson = JSON.stringify(data, null, 2);
@@ -1933,6 +2051,10 @@ export default function App() {
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <div className="header-data-btns">
+            <button onClick={() => setQuickAddOpen(true)} style={{ background: "#4F646F", border: "none", color: "#fff", borderRadius: "6px", padding: "6px 14px", fontSize: "11px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "5px" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              AI ADD
+            </button>
             <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
             <button onClick={exportData} style={{ background: "transparent", border: "1px solid #4F646F55", color: "#4F646F", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
           </div>
@@ -2021,6 +2143,105 @@ export default function App() {
         </Modal>
       )}
 
+      {/* Quick Add Modal */}
+      {quickAddOpen && (
+        <Modal title="AI Quick Add" onClose={() => { setQuickAddOpen(false); setQuickAddText(""); setQuickAddResult(null); }}>
+          {!quickAddResult ? (
+            <>
+              <p style={{ color: "var(--text-tertiary)", fontSize: "13px", marginTop: 0, marginBottom: "14px", lineHeight: 1.6 }}>
+                Describe what happened, who you met, or what needs to be done. Claude will figure out what to add to your CRM.
+              </p>
+              <textarea
+                value={quickAddText}
+                onChange={e => setQuickAddText(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) parseQuickAdd(); }}
+                placeholder={"\"Had a coffee chat with Sarah Chen at Nike today, she works in product. Need to follow up tomorrow.\"\n\n\"Applied to the PM role at Figma via LinkedIn.\"\n\n\"Got a LinkedIn message from John at Sequoia asking to connect.\""}
+                rows={6}
+                style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "10px", fontSize: "13px", outline: "none", resize: "vertical", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}
+              />
+              <div style={{ fontSize: "11px", color: "var(--text-tertiary)", marginTop: "6px", marginBottom: "12px" }}>Tip: Cmd+Enter to parse</div>
+              <button
+                onClick={parseQuickAdd}
+                disabled={quickAddLoading || !quickAddText.trim()}
+                style={{ width: "100%", background: quickAddLoading || !quickAddText.trim() ? "var(--border)" : "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: quickAddLoading || !quickAddText.trim() ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                {quickAddLoading ? "Parsing with Claude..." : "Parse with Claude"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={{ background: "#4F646F12", border: "1px solid #4F646F33", borderRadius: "8px", padding: "12px 14px", marginBottom: "16px", fontSize: "13px", color: "#4F646F", lineHeight: 1.6 }}>
+                {quickAddResult.interpretation}
+              </div>
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "10px" }}>Records to create</div>
+              {quickAddResult.records.map((record, i) => {
+                const typeColors = {
+                  company: { bg: "#3b82f622", text: "#3b82f6", border: "#3b82f644" },
+                  contact: { bg: "#8b5cf622", text: "#8b5cf6", border: "#8b5cf644" },
+                  outreach: { bg: "#f59e0b22", text: "#f59e0b", border: "#f59e0b44" },
+                  action_item: { bg: "#10b98122", text: "#10b981", border: "#10b98144" },
+                };
+                const colors = typeColors[record.type] || typeColors.company;
+                return (
+                  <div key={i} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 14px", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                      <span style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: "4px", padding: "2px 8px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}>
+                        {record.type.replace("_", " ")}
+                      </span>
+                      {record.action === "existing" && (
+                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", fontWeight: 600, letterSpacing: "0.04em" }}>ALREADY IN CRM</span>
+                      )}
+                    </div>
+                    {record.type === "company" && (
+                      <>
+                        <div style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 600 }}>{record.data.name}</div>
+                        {(record.data.vertical || record.data.stage) && <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>{[record.data.vertical, record.data.stage].filter(Boolean).join(" · ")}</div>}
+                      </>
+                    )}
+                    {record.type === "contact" && (
+                      <>
+                        <div style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 600 }}>{record.data.name}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
+                          {[record.data.title, record.data.companyName].filter(Boolean).join(" @ ")}
+                          {record.data.contactType?.length ? ` · ${record.data.contactType.join(", ")}` : ""}
+                          {record.data.howKnown ? ` · ${record.data.howKnown}` : ""}
+                        </div>
+                      </>
+                    )}
+                    {record.type === "outreach" && (
+                      <>
+                        <div style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 600 }}>{record.data.summary}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
+                          {[record.data.contactName, record.data.channel, record.data.direction, record.data.date, record.data.status].filter(Boolean).join(" · ")}
+                        </div>
+                      </>
+                    )}
+                    {record.type === "action_item" && (
+                      <>
+                        <div style={{ fontSize: "13px", color: "var(--text-primary)", fontWeight: 600 }}>{record.data.description}</div>
+                        <div style={{ fontSize: "12px", color: "var(--text-tertiary)", marginTop: "2px" }}>
+                          Priority: {record.data.priority} · Effort: {record.data.effort}
+                          {record.data.dueDate ? ` · Due: ${record.data.dueDate}` : ""}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+              <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                <button onClick={() => setQuickAddResult(null)} style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--text-secondary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer" }}>
+                  ← Edit
+                </button>
+                <button onClick={saveQuickAdd} disabled={quickAddSaving} style={{ flex: 2, background: quickAddSaving ? "var(--border)" : "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: quickAddSaving ? "not-allowed" : "pointer" }}>
+                  {quickAddSaving ? "Saving..." : "Confirm & Save All"}
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+
       {/* Mobile Bottom Nav */}
       <div className="mobile-bottom-nav">
         {TABS.map(t => (
@@ -2046,6 +2267,15 @@ export default function App() {
             {t.label}
           </button>
         ))}
+        <button onClick={() => setQuickAddOpen(true)} style={{
+          flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: "3px", background: "none", border: "none", borderTop: "2px solid #4F646F",
+          cursor: "pointer", color: "#4F646F", padding: "8px 4px",
+          fontSize: "9px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          AI Add
+        </button>
       </div>
 
       <Toast message={toast} onClose={() => setToast(null)} />

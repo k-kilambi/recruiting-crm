@@ -314,6 +314,58 @@ Run this in Supabase SQL Editor — it runs as postgres superuser, bypasses RLS,
 
 ---
 
+## UI Polish Session — Kanban, Card Views, Responsive Design
+
+---
+
+### Insight 24: Always commit package files when installing a new dependency
+
+**The trigger:** `npm install @dnd-kit/core` worked locally and the local build passed, but the Vercel deploy failed with a missing module error. The package existed in `node_modules` locally but wasn't in git — so Vercel's fresh build didn't know it existed.
+
+**The concept:** `npm install` updates two files: `package.json` (the list of dependencies) and `package-lock.json` (the exact locked versions). Vercel runs its own `npm install` from your committed package files when it builds. If those files don't include the new package, the build fails in production even though it worked locally.
+
+**The rule:** Every time you install a new package, add `package.json` and `package-lock.json` to the same commit as the code that uses the package. Don't just commit the source file.
+
+---
+
+### Insight 25: Media queries can't be applied in inline styles — use CSS classes
+
+**The trigger:** App.jsx uses inline styles for almost everything. Needed to hide the kanban board toggle on mobile, but `style={{ display: "flex" }}` has no way to respond to screen width.
+
+**The concept:** Inline styles and CSS media queries are different mechanisms. Media queries live in CSS files and respond to viewport conditions. Inline styles are applied directly on the element and have no concept of viewport. To make an element responsive when your app uses inline styles, you need CSS classes.
+
+**The pattern used:**
+```css
+/* index.css — inside the mobile media query */
+@media (max-width: 768px) {
+  .board-toggle { display: none !important; }
+}
+```
+```jsx
+/* App.jsx */
+<div className="board-toggle" style={{ display: "flex", gap: "8px" }}>
+  {/* toggle buttons */}
+</div>
+```
+
+The `!important` is required because inline styles have higher CSS specificity than class-based styles. Without it, the media query doesn't override the inline `display: flex`.
+
+**The broader rule:** When you need responsive behavior in a React app that uses inline styles, pull that specific behavior into a CSS class. Don't try to replicate media query logic in JS (e.g. checking `window.innerWidth`) unless you have a specific reason — CSS handles this natively and more cleanly.
+
+---
+
+### Insight 26: "DevOps" is a specific term — don't use it to mean "product process"
+
+**The trigger:** Kumar asked "does that make sense from a DevOps standpoint?" when choosing between shipping UI polish vs. Stage 4 features next.
+
+**What DevOps actually means:** The practices around deployment pipelines, CI/CD, infrastructure automation, and monitoring — the overlap between "development" and "operations." The GitHub → Vercel auto-deploy pipeline in this project is actual DevOps work.
+
+**What Kumar was asking about:** Product development philosophy — whether to polish before adding features, or add features first. The right term is "product development process" or just "engineering best practice."
+
+**The answer to the actual question:** For a personal tool you use daily with bounded scope, polishing before the next feature phase is defensible — it keeps the product coherent and the mental model clean. In product teams, the common pattern is to ship features continuously while polishing, not serially. But serial works fine when the polish scope is well-defined.
+
+---
+
 ## Project Decisions Log
 
 | # | Decision | Rationale | Insight |
@@ -330,6 +382,7 @@ Run this in Supabase SQL Editor — it runs as postgres superuser, bypasses RLS,
 | 10 | Open signup with private URL (vs. invite-only) | Invite-only adds ongoing maintenance burden; private URL is effective gatekeeping with zero overhead | — |
 | 11 | Resend for email delivery (vs. Supabase built-in) | Built-in is rate-limited and not production-grade; Resend free tier handles real usage | Insight 21 |
 | 12 | RLS enforced at DB level with user_id on all tables | App-level auth alone is insufficient; DB-level isolation means bypassing the frontend still can't expose other users' data | Insight 19 |
+| 13 | UI polish (kanban, card grids, feed view) before Stage 4 AI features | Daily-use tool benefits from good UX; bounded scope; cleaner mental model before building the AI layer | Insight 26 |
 
 ---
 
@@ -361,4 +414,4 @@ Run this in Supabase SQL Editor — it runs as postgres superuser, bypasses RLS,
 ---
 
 *Last updated: May 2026*
-*Next update: After Stage 4 (AI layer) or significant feature additions*
+*Next update: After Stage 4 (AI layer)*
