@@ -30,3 +30,4 @@ migrate-old-data.sql
 
 # AI assistant instructions — internal only
 CLAUDE.md
+.claude/settings.local.json
