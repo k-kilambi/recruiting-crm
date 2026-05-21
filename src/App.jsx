@@ -1620,7 +1620,55 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
   );
 };
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
+// ─── LOGIN / LANDING ──────────────────────────────────────────────────────────
+const LANDING_FEATURES = [
+  {
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="3" cy="3" r="2" stroke="#4F646F" strokeWidth="1.5"/>
+        <circle cx="13" cy="3" r="2" stroke="#4F646F" strokeWidth="1.5"/>
+        <circle cx="8" cy="13" r="2" stroke="#4F646F" strokeWidth="1.5"/>
+        <line x1="3" y1="5" x2="8" y2="11" stroke="#4F646F" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="13" y1="5" x2="8" y2="11" stroke="#4F646F" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    label: "Relational model",
+    desc: "Companies, jobs, and contacts are linked — see the full picture, not disconnected spreadsheets.",
+  },
+  {
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1.5" y="2.5" width="13" height="11" rx="2" stroke="#4F646F" strokeWidth="1.5"/>
+        <line x1="4" y1="6" x2="12" y2="6" stroke="#4F646F" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="4" y1="9" x2="10" y2="9" stroke="#4F646F" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+    label: "Outreach log",
+    desc: "Every call, email, and message recorded with context. Never go blank before a follow-up.",
+  },
+  {
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" stroke="#4F646F" strokeWidth="1.5"/>
+        <polyline points="5,8 7,10.5 11,5.5" stroke="#4F646F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    label: "Action items",
+    desc: "Know exactly what's next for every relationship — prioritized, not buried in notes.",
+  },
+  {
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="3" width="4" height="10" rx="1" stroke="#4F646F" strokeWidth="1.5"/>
+        <rect x="6" y="3" width="4" height="7" rx="1" stroke="#4F646F" strokeWidth="1.5"/>
+        <rect x="11" y="3" width="4" height="5" rx="1" stroke="#4F646F" strokeWidth="1.5"/>
+      </svg>
+    ),
+    label: "Kanban pipeline",
+    desc: "Visualize your job applications as a board. Drag across stages as things progress.",
+  },
+];
+
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -1641,38 +1689,101 @@ const LoginScreen = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', 'Segoe UI', sans-serif" }}>
+    <div className="landing-container">
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-      <div style={{ width: "100%", maxWidth: "380px", padding: "0 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "36px" }}>
-          <div style={{ width: "28px", height: "28px", background: "#4F646F", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontSize: "14px", fontWeight: 800 }}>R</span>
-          </div>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>recruiting.crm</span>
+
+      {/* Nav */}
+      <nav className="landing-nav">
+        <div style={{ width: "28px", height: "28px", background: "#4F646F", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <span style={{ color: "#fff", fontSize: "14px", fontWeight: 800 }}>R</span>
         </div>
-        {sent ? (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "28px", textAlign: "center" }}>
-            <div style={{ fontSize: "32px", marginBottom: "14px" }}>📬</div>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>Check your email</div>
-            <div style={{ fontSize: "13px", color: "var(--text-tertiary)", lineHeight: 1.6 }}>We sent a magic link to <span style={{ color: "var(--text-primary)" }}>{email}</span>. Click it to sign in.</div>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>recruiting.crm</span>
+      </nav>
+
+      {/* Body */}
+      <div className="landing-body">
+        <div className="landing-inner">
+
+          {/* Hero */}
+          <div className="landing-hero">
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "4px 12px", marginBottom: "24px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4F646F", flexShrink: 0 }} />
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.04em" }}>Built for the MBA job search</span>
+            </div>
+
+            <h1 style={{ margin: "0 0 16px", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
+              Your job search is<br />a relationship game.
+            </h1>
+            <p style={{ margin: "0 0 44px", fontSize: "16px", color: "var(--text-secondary)", lineHeight: 1.7, maxWidth: "400px" }}>
+              Track every company, contact, and conversation in one relational CRM — so nothing falls through the cracks when it matters most.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
+              {LANDING_FEATURES.map(f => (
+                <div key={f.label} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                  <div style={{ width: "34px", height: "34px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {f.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "2px" }}>{f.label}</div>
+                    <div style={{ fontSize: "13px", color: "var(--text-tertiary)", lineHeight: 1.55 }}>{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "10px", padding: "28px" }}>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "20px" }}>Sign in</div>
-            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Email</label>
-            <input
-              type="email" value={email} onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && sendLink()}
-              placeholder="you@example.com"
-              style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "10px 12px", fontSize: "14px", outline: "none", marginBottom: "14px" }}
-            />
-            {error && <div style={{ fontSize: "12px", color: "#ef4444", marginBottom: "12px" }}>{error}</div>}
-            <button onClick={sendLink} disabled={loading}
-              style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "11px", fontWeight: 700, fontSize: "13px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}>
-              {loading ? "Sending…" : "Send magic link"}
-            </button>
+
+          {/* Auth card */}
+          <div className="landing-auth">
+            {sent ? (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "32px", textAlign: "center" }}>
+                <div style={{ fontSize: "36px", marginBottom: "16px" }}>📬</div>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>Check your email</div>
+                <div style={{ fontSize: "13px", color: "var(--text-tertiary)", lineHeight: 1.65 }}>
+                  We sent a magic link to{" "}
+                  <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{email}</span>.
+                  Click it to sign in.
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "32px" }}>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "6px" }}>Sign in to your CRM</div>
+                <div style={{ fontSize: "13px", color: "var(--text-tertiary)", lineHeight: 1.6, marginBottom: "24px" }}>
+                  Enter your email and we'll send a secure link — no password needed.
+                </div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "5px" }}>Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && sendLink()}
+                  placeholder="you@example.com"
+                  style={{ width: "100%", boxSizing: "border-box", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-primary)", borderRadius: "6px", padding: "10px 12px", fontSize: "14px", outline: "none", marginBottom: "14px" }}
+                />
+                {error && <div style={{ fontSize: "12px", color: "#ef4444", marginBottom: "12px" }}>{error}</div>}
+                <button
+                  onClick={sendLink}
+                  disabled={loading}
+                  className="btn-click"
+                  style={{ width: "100%", background: "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "11px", fontWeight: 700, fontSize: "13px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}
+                >
+                  {loading ? "Sending…" : "Send magic link"}
+                </button>
+                <div style={{ marginTop: "16px", fontSize: "11px", color: "var(--text-tertiary)", textAlign: "center", lineHeight: 1.5 }}>
+                  By signing in, you agree that your data is stored securely and never shared.
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="landing-footer">
+        <span style={{ fontSize: "12px", color: "var(--text-tertiary)" }}>
+          recruiting.crm · Your data is yours · Built by Kumar @ Haas
+        </span>
       </div>
     </div>
   );

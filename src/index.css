@@ -69,6 +69,65 @@ tbody tr:hover {
   }
 }
 
+/* ── Landing page ────────────────────────────────────────────────────────── */
+.landing-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+
+.landing-nav {
+  padding: 18px 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.landing-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 48px;
+}
+
+.landing-inner {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  gap: 72px;
+  align-items: flex-start;
+}
+
+.landing-hero {
+  flex: 1;
+  min-width: 0;
+}
+
+.landing-auth {
+  width: 340px;
+  flex-shrink: 0;
+}
+
+.landing-footer {
+  border-top: 1px solid var(--border);
+  padding: 18px 48px;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .landing-nav   { padding: 16px 20px; }
+  .landing-body  { padding: 28px 20px; align-items: flex-start; }
+  .landing-inner { flex-direction: column; gap: 40px; }
+  .landing-hero  { order: 2; }
+  .landing-auth  { width: 100%; order: 1; }
+  .landing-footer { padding: 16px 20px; }
+}
+
 /* ── Responsive navigation ───────────────────────────────────────────────── */
 .desktop-nav {
   display: flex;
