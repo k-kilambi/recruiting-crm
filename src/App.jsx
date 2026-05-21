@@ -1706,11 +1706,6 @@ const LoginScreen = () => {
 
           {/* Hero */}
           <div className="landing-hero">
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "4px 12px", marginBottom: "24px" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4F646F", flexShrink: 0 }} />
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.04em" }}>Built for the MBA job search</span>
-            </div>
-
             <h1 style={{ margin: "0 0 16px", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1.15, letterSpacing: "-0.02em" }}>
               Your job search is<br />a relationship game.
             </h1>
