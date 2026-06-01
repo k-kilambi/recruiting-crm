@@ -1505,12 +1505,9 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
               return (
                 <div key={o.id} onClick={() => onEditOutreach(o)} className="dash-action-card"
                   style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "3px solid #f59e0b", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", cursor: "pointer" }}>
-                  <div style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: "var(--text-primary)" }}>{ctName(o.contactId)}</div>
+                  <div style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: "var(--text-primary)" }}>Follow up re: {o.summary}</div>
                   <div className="dash-action-meta">
-                    <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                      <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>re </span>
-                      <span style={{ color: "var(--text-secondary)" }}>{o.summary}</span>
-                    </span>
+                    <span style={{ whiteSpace: "nowrap", fontSize: "13px", color: "var(--text-secondary)" }}>{ctName(o.contactId)}</span>
                     <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
                       <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>date </span>
                       <span style={{ color: "var(--text-secondary)" }}>{o.date}</span>
