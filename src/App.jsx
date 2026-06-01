@@ -1394,25 +1394,52 @@ const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts
 
 // ─── DASHBOARD TAB ────────────────────────────────────────────────────────────
 const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
-  const followUps = data.outreach.filter(o => {
-    if (o.status !== "Follow-up Needed") return false;
-    // suppress if there are open (non-backlogged) action items for this outreach
-    const openActions = (data.actionItems || []).filter(a => a.outreachId === o.id && !a.done && !a.backlog);
-    return openActions.length === 0;
-  });
-  const noResponse = data.outreach.filter(o => o.status === "No Response");
-  const interviewing = data.jobs.filter(j => j.status === "Interviewing");
-  const openActions = (data.actionItems || []).filter(a => !a.done && !a.backlog && a.outreachId);
-  const newLeadActions = (data.actionItems || []).filter(a => !a.done && !a.backlog && a.contactId && !a.outreachId);
-  const backlogActions = (data.actionItems || []).filter(a => !a.done && a.backlog);
   const [showBacklog, setShowBacklog] = useState(false);
-  const highPriorityActions = openActions.filter(a => a.priority === "H");
+  const [showNoResponse, setShowNoResponse] = useState(false);
+
+  // ── Derived data ─────────────────────────────────────────────────────────────
+  const allOpenActions = (data.actionItems || []).filter(a => !a.done && !a.backlog);
+  const backlogActions  = (data.actionItems || []).filter(a => !a.done && a.backlog);
+  const followUpOutreach = data.outreach.filter(o => o.status === "Follow-up Needed");
+  const noResponse       = data.outreach.filter(o => o.status === "No Response");
+
+  // ── Stat card values ─────────────────────────────────────────────────────────
+  const openActionsCount  = allOpenActions.length;
+  const followUpsDueCount = followUpOutreach.length;
+  const interviewingCount = data.jobs.filter(j => j.status === "Interviewing").length;
+  const appsSentCount     = data.jobs.filter(j => j.status === "Applied").length;
+
+  // ── Unified sorted list (action items + follow-up outreach) ──────────────────
+  const PRIORITY_ORDER = { H: 0, M: 1, L: 2 };
+  const EFFORT_ORDER   = { L: 0, M: 1, H: 2 };
+  const unifiedItems = [
+    ...allOpenActions.map(a => ({ _kind: "action", ...a })),
+    ...followUpOutreach.map(o => ({ _kind: "followup", ...o })),
+  ].sort((a, b) => {
+    const pa = PRIORITY_ORDER[a.priority] ?? 3;
+    const pb = PRIORITY_ORDER[b.priority] ?? 3;
+    if (pa !== pb) return pa - pb;
+    const ea = EFFORT_ORDER[a.effort] ?? 3;
+    const eb = EFFORT_ORDER[b.effort] ?? 3;
+    return ea - eb;
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
   const ctName = id => data.contacts.find(c => c.id === id)?.name || "—";
-  const coName = id => data.companies.find(c => c.id === id)?.name || "—";
   const outreachSummary = id => data.outreach.find(o => o.id === id)?.summary || "—";
-  const outreachContact = id => {
-    const o = data.outreach.find(o => o.id === id);
-    return o ? ctName(o.contactId) : "—";
+  const outreachContact = id => { const o = data.outreach.find(o => o.id === id); return o ? ctName(o.contactId) : "—"; };
+
+  const markDone = async id => {
+    await supabase.from("action_items").update({ done: true }).eq("id", id);
+    setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === id ? { ...x, done: true } : x) }));
+  };
+  const moveToBacklog = async id => {
+    await supabase.from("action_items").update({ backlog: true }).eq("id", id);
+    setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === id ? { ...x, backlog: true } : x) }));
+  };
+  const restoreFromBacklog = async id => {
+    await supabase.from("action_items").update({ backlog: false }).eq("id", id);
+    setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === id ? { ...x, backlog: false } : x) }));
   };
 
   const StatCard = ({ label, value, color }) => (
@@ -1427,157 +1454,77 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
       <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Dashboard</div>
       <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "24px" }}>Overview</div>
 
+      {/* ── Stat cards ─────────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
-        <StatCard label="To-Do" value={openActions.length + newLeadActions.length + followUps.length} color={openActions.length + newLeadActions.length + followUps.length > 0 ? "#ef4444" : "var(--text-primary)"} />
-        <StatCard label="Apps Sent" value={data.jobs.filter(j => ["Applied", "Interviewing", "Offer", "Rejected", "Withdrew"].includes(j.status)).length} />
-        <StatCard label="Waiting" value={data.jobs.filter(j => j.status === "Applied").length} color={data.jobs.filter(j => j.status === "Applied").length > 0 ? "#f59e0b" : "var(--text-primary)"} />
-        <StatCard label="Interviewing" value={interviewing.length} color={STATUS_COLORS.Interviewing} />
+        <StatCard label="Open Actions"  value={openActionsCount}  color={openActionsCount  > 0 ? "#ef4444" : "var(--text-primary)"} />
+        <StatCard label="Follow-ups Due" value={followUpsDueCount} color={followUpsDueCount > 0 ? "#f59e0b" : "var(--text-primary)"} />
+        <StatCard label="Interviewing"  value={interviewingCount} color={STATUS_COLORS.Interviewing} />
+        <StatCard label="Apps Sent"     value={appsSentCount} />
       </div>
 
-      {highPriorityActions.length > 0 && (
+      {/* ── Unified Actions list ────────────────────────────────────────────────── */}
+      {unifiedItems.length > 0 && (
         <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🔴 High Priority Actions</div>
-          {highPriorityActions.map(a => (
-            <div key={a.id} className="dash-action-card" style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
-              <div onClick={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
-              </div>
-              <div style={{ flex: 1, fontSize: "17px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
-              <div className="dash-action-meta">
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>outreach </span>
-                  <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "13px", cursor: "pointer", padding: 0 }}>
-                    {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
-                  </button>
-                </span>
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>priority </span>
-                  <span style={{ color: "#ef4444", fontWeight: 700 }}>● High</span>
-                </span>
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>effort </span>
-                  <span style={{ fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"}</span>
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {newLeadActions.length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "12px", color: "#8b5cf6", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🟣 Contact Actions</div>
-          {newLeadActions.map(a => {
-            const contact = data.contacts.find(c => c.id === a.contactId);
-            const company = data.companies.find(co => co.id === contact?.companyId);
-            return (
-              <div key={a.id} className="dash-action-card" style={{ background: "var(--surface)", border: "1px solid #8b5cf633", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
-                <div onClick={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                  style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
+          <div style={{ fontSize: "12px", color: "var(--text-tertiary)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>Actions</div>
+          {unifiedItems.map(item => {
+            if (item._kind === "action") {
+              const a = item;
+              const contact = a.contactId ? data.contacts.find(c => c.id === a.contactId) : null;
+              const company = contact ? data.companies.find(co => co.id === contact.companyId) : null;
+              return (
+                <div key={a.id} className="dash-action-card" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "3px solid #3b82f6", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
+                  <div onClick={() => markDone(a.id)}
+                    style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
+                  </div>
+                  <div style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
+                  <div className="dash-action-meta">
+                    {a.outreachId && (
+                      <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>outreach </span>
+                        <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
+                          style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "13px", cursor: "pointer", padding: 0 }}>
+                          {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
+                        </button>
+                      </span>
+                    )}
+                    {a.contactId && !a.outreachId && contact && (
+                      <span style={{ whiteSpace: "nowrap", fontSize: "13px", color: "var(--text-secondary)" }}>
+                        {contact.name}{company ? ` · ${company.name}` : ""}
+                      </span>
+                    )}
+                    <button onClick={() => moveToBacklog(a.id)} className="btn-click"
+                      style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "4px 10px", fontSize: "13px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>
+                      ⏸ Backlog
+                    </button>
+                  </div>
                 </div>
-                <div style={{ flex: 1, fontSize: "17px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
-                <div className="dash-action-meta">
-                  <span style={{ whiteSpace: "nowrap", fontSize: "13px", color: "#8b5cf6" }}>{contact?.name || "—"}{company ? ` · ${company.name}` : ""}</span>
-                  <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                    <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>priority </span>
-                    <span style={{ color: PRIORITY_COLORS[a.priority], fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
-                  </span>
-                  <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                    <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>effort </span>
-                    <span style={{ fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"}</span>
-                  </span>
-                  <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                    className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "4px 10px", fontSize: "13px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>⏸ Defer</button>
+              );
+            } else {
+              const o = item;
+              return (
+                <div key={o.id} onClick={() => onEditOutreach(o)} className="dash-action-card"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "3px solid #f59e0b", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", cursor: "pointer" }}>
+                  <div style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: "var(--text-primary)" }}>{ctName(o.contactId)}</div>
+                  <div className="dash-action-meta">
+                    <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
+                      <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>re </span>
+                      <span style={{ color: "var(--text-secondary)" }}>{o.summary}</span>
+                    </span>
+                    <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
+                      <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>date </span>
+                      <span style={{ color: "var(--text-secondary)" }}>{o.date}</span>
+                    </span>
+                    <span style={{ color: "#3b82f6", fontSize: "13px", whiteSpace: "nowrap" }}>edit ↗</span>
+                  </div>
                 </div>
-              </div>
-            );
+              );
+            }
           })}
         </div>
       )}
 
-      {openActions.filter(a => a.priority !== "H").length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "12px", color: "#4F646F", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>📋 Other Open Actions</div>
-          {openActions.filter(a => a.priority !== "H").map(a => (
-            <div key={a.id} className="dash-action-card" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
-              <div onClick={async () => { await supabase.from("action_items").update({ done: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, done: true } : x) })); }}
-                style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
-              </div>
-              <div style={{ flex: 1, fontSize: "17px", color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
-              <div className="dash-action-meta">
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>outreach </span>
-                  <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                    style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "13px", cursor: "pointer", padding: 0 }}>
-                    {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
-                  </button>
-                </span>
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>priority </span>
-                  <span style={{ color: PRIORITY_COLORS[a.priority], fontWeight: 700 }}>● {a.priority === "H" ? "High" : a.priority === "M" ? "Med" : "Low"}</span>
-                </span>
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>effort </span>
-                  <span style={{ fontFamily: "'DM Mono', monospace" }}>{a.effort === "H" ? "▓▓▓" : a.effort === "M" ? "▓▓░" : "▓░░"}</span>
-                </span>
-                <button onClick={async () => { await supabase.from("action_items").update({ backlog: true }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: true } : x) })); }}
-                  className="btn-click" title="Defer to backlog" style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "4px 10px", fontSize: "13px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>⏸ Defer</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {followUps.length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "12px", color: "#ef4444", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>⚡ Follow-ups Needed</div>
-          {followUps.map(o => (
-            <div key={o.id} onClick={() => onEditOutreach(o)}
-              className="dash-action-card"
-              style={{ background: "var(--surface)", border: "1px solid #ef444433", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", cursor: "pointer" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "#ef4444aa"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "#ef444433"}>
-              <div style={{ flex: 1, fontSize: "17px", fontWeight: 500, color: "var(--text-primary)" }}>{ctName(o.contactId)}</div>
-              <div className="dash-action-meta">
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>re </span>
-                  <span style={{ color: "var(--text-secondary)" }}>{o.summary}</span>
-                </span>
-                <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                  <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>date </span>
-                  <span style={{ color: "var(--text-secondary)" }}>{o.date}</span>
-                </span>
-                <span style={{ color: "#3b82f6", fontSize: "13px", whiteSpace: "nowrap" }}>edit ↗</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {interviewing.length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "12px", color: "#4F646F", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>🎯 Active Interviews</div>
-          {interviewing.map(j => (
-            <div key={j.id} onClick={() => onEditJob(j)} style={{ background: "var(--surface)", border: "1px solid #4F646F40", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "#4F646Faa"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "#4F646F40"}>
-              <div>
-                <div style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "13px" }}>{j.title}</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>{coName(j.companyId)}</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Badge label="Interviewing" />
-                <span style={{ color: "#3b82f6", fontSize: "11px" }}>edit ↗</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
+      {/* ── Backlog (collapsed) ─────────────────────────────────────────────────── */}
       {backlogActions.length > 0 && (
         <div style={{ marginBottom: "24px" }}>
           <button onClick={() => setShowBacklog(s => !s)} style={{ background: "transparent", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
@@ -1590,17 +1537,21 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
                 <div style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>{a.description}</div>
                 <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>re: {data.contacts.find(c => c.id === (data.outreach.find(o => o.id === a.outreachId)?.contactId))?.name || "—"}</div>
               </div>
-              <button onClick={async () => { await supabase.from("action_items").update({ backlog: false }).eq("id", a.id); setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === a.id ? { ...x, backlog: false } : x) })); }}
+              <button onClick={() => restoreFromBacklog(a.id)}
                 style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>restore</button>
             </div>
           ))}
         </div>
       )}
 
+      {/* ── No Response (collapsed) ─────────────────────────────────────────────── */}
       {noResponse.length > 0 && (
         <div>
-          <div style={{ fontSize: "12px", color: "var(--text-tertiary)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>💤 No Response</div>
-          {noResponse.map(o => (
+          <button onClick={() => setShowNoResponse(s => !s)} style={{ background: "transparent", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+            <span style={{ fontSize: "14px" }}>{showNoResponse ? "▾" : "▸"}</span>
+            NO RESPONSE <span style={{ fontSize: "10px", color: "var(--text-tertiary)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>{noResponse.length}</span>
+          </button>
+          {showNoResponse && noResponse.map(o => (
             <div key={o.id} onClick={() => onEditOutreach(o)} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text-tertiary)"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
