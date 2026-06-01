@@ -2001,6 +2001,7 @@ export default function App() {
     if (!quickAddResult?.records) return;
     setQuickAddSaving(true);
     let companyId = null;
+    let jobId = null;
     let contactId = null;
     let outreachId = null;
     try {
@@ -2015,6 +2016,27 @@ export default function App() {
           if (error) throw error;
           companyId = data.id;
           setCompanies(prev => [toCamel(data), ...prev]);
+        }
+
+        if (record.type === "job") {
+          if (record.action === "existing") { jobId = record.existingId; continue; }
+          const resolvedCompanyId = companyId
+            || companies.find(c => c.name.toLowerCase() === record.data.companyName?.toLowerCase())?.id
+            || null;
+          const { data, error } = await supabase.from("jobs").insert({
+            title: record.data.title,
+            company_id: resolvedCompanyId,
+            function: record.data.function || "Other",
+            source: record.data.source || "Other",
+            status: record.data.status || "Applied",
+            date_added: new Date().toISOString().split("T")[0],
+            jd_link: record.data.jdLink || null,
+            notes: record.data.notes || null,
+            user_id: session.user.id,
+          }).select().single();
+          if (error) throw error;
+          jobId = data.id;
+          setJobs(prev => [toCamelJob(data), ...prev]);
         }
 
         if (record.type === "contact") {
@@ -2041,7 +2063,7 @@ export default function App() {
             || contacts.find(c => c.name.toLowerCase() === record.data.contactName?.toLowerCase())?.id
             || null;
           const { data, error } = await supabase.from("outreach").insert({
-            contact_id: resolvedContactId, job_id: null,
+            contact_id: resolvedContactId, job_id: jobId,
             channel: record.data.channel, direction: record.data.direction,
             date: record.data.date, summary: record.data.summary,
             status: record.data.status || "Sent",

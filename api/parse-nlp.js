@@ -2,6 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const VERTICALS = ["Sports", "Fitness", "Gaming", "Entertainment", "Tech", "Fintech", "Other"];
 const STAGES = ["Pre-seed", "Seed", "Series A", "Series B", "Series C+", "Public", "N/A"];
+const FUNCTIONS = ["Product Management", "GTM / Growth", "Strategy & Operations", "Consulting", "Business Development", "Other"];
+const SOURCES = ["LinkedIn", "Referral", "Company Site", "Handshake", "Other"];
+const JOB_STATUSES = ["Interested", "Applied", "Interviewing", "Offer", "Rejected", "Withdrew"];
 const CHANNELS = ["Email", "LinkedIn", "In-Person", "Phone", "Text Message", "WhatsApp", "Slack"];
 const OUTREACH_STATUSES = ["Sent", "Replied", "No Response", "Follow-up Needed"];
 const CONTACT_TYPES = ["Target", "Bridge", "Resource"];
@@ -31,6 +34,15 @@ Today's date: ${currentDate}
 - vertical (one of: ${VERTICALS.join(", ")}) — infer from context, default "Other"
 - stage (one of: ${STAGES.join(", ")}) — default "N/A"
 - website (string, optional)
+- notes (string, optional)
+
+### job
+- title (string, required)
+- companyName (string, optional) — name of the company offering the role
+- function (one of: ${FUNCTIONS.join(", ")}) — default "Other"
+- source (one of: ${SOURCES.join(", ")}) — where you found it, default "Other"
+- status (one of: ${JOB_STATUSES.join(", ")}) — default "Applied"
+- jdLink (string, optional) — URL to the job description
 - notes (string, optional)
 
 ### contact
@@ -69,7 +81,7 @@ Jobs: ${JSON.stringify(existingJobs)}
 1. Match existing companies/contacts by name (case-insensitive). If matched, set action="existing" and existingId to their id.
 2. Only create records clearly implied by the note. Don't invent fields not mentioned.
 3. outreach = something that ALREADY happened. A plan to reach out = action_item on the contact (linkedTo: "contact"), not an outreach record.
-4. Order records: company → contact → outreach → action_item.
+4. Order records: company → job → contact → outreach → action_item.
 5. Return ONLY valid JSON, no markdown fences, no explanation outside the JSON object.
 
 ## Output format
@@ -77,7 +89,7 @@ Jobs: ${JSON.stringify(existingJobs)}
   "interpretation": "1-2 sentence plain English summary of what you understood",
   "records": [
     {
-      "type": "company" | "contact" | "outreach" | "action_item",
+      "type": "company" | "job" | "contact" | "outreach" | "action_item",
       "action": "create" | "existing",
       "existingId": null | "uuid-string",
       "data": { ...fields }
