@@ -1828,6 +1828,13 @@ export default function App() {
   const [quickAddResult, setQuickAddResult] = useState(null);
   const [quickAddSaving, setQuickAddSaving] = useState(false);
 
+  // ── Premium gating state ──────────────────────────────────────────────────────
+  const [userTier, setUserTier] = useState("free");
+  const [aiInterestSubmitted, setAiInterestSubmitted] = useState(false);
+  const [premiumGateOpen, setPremiumGateOpen] = useState(false);
+  const [premiumGateMsg, setPremiumGateMsg] = useState("");
+  const [premiumGateSubmitting, setPremiumGateSubmitting] = useState(false);
+
   // ── Build data object for child components ───────────────────────────────────
   const data = { companies, jobs, contacts, outreach, actionItems };
   const setData = (updater) => {
@@ -1844,13 +1851,17 @@ export default function App() {
     if (!session) return;
     const fetchAll = async () => {
       setLoading(true);
-      const [co, jo, ct, ou, ai] = await Promise.all([
+      const [co, jo, ct, ou, ai, profileRes, interestRes] = await Promise.all([
         supabase.from("companies").select("*").order("created_at", { ascending: false }),
         supabase.from("jobs").select("*").order("created_at", { ascending: false }),
         supabase.from("contacts").select("*").order("created_at", { ascending: false }),
         supabase.from("outreach").select("*").order("date", { ascending: false }),
         supabase.from("action_items").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("tier").eq("user_id", session.user.id).maybeSingle(),
+        supabase.from("ai_interest").select("id").eq("user_id", session.user.id).maybeSingle(),
       ]);
+      setUserTier(profileRes.data?.tier || "free");
+      setAiInterestSubmitted(!!interestRes.data);
       setCompanies(co.data || []);
       setJobs((jo.data || []).map(j => ({
         ...j,
@@ -2070,6 +2081,27 @@ export default function App() {
     setQuickAddSaving(false);
   };
 
+  // ── Premium gate interest submission ─────────────────────────────────────────
+  const submitInterest = async () => {
+    setPremiumGateSubmitting(true);
+    try {
+      const { error } = await supabase.from("ai_interest").insert({
+        user_id: session.user.id,
+        message: premiumGateMsg.trim() || null,
+      });
+      if (error) throw error;
+      await fetch("/api/notify-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userEmail: session.user.email, message: premiumGateMsg.trim() }),
+      });
+      setAiInterestSubmitted(true);
+    } catch (err) {
+      showError("Something went wrong — please try again.");
+    }
+    setPremiumGateSubmitting(false);
+  };
+
   // ── Export / Import ───────────────────────────────────────────────────────────
   const exportData = () => setShowExport(true);
   const exportJson = JSON.stringify(data, null, 2);
@@ -2157,7 +2189,7 @@ export default function App() {
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <div className="header-data-btns">
-            <button onClick={() => setQuickAddOpen(true)} style={{ background: "#4F646F", border: "none", color: "#fff", borderRadius: "6px", padding: "6px 14px", fontSize: "11px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "5px" }}>
+            <button onClick={() => userTier === "premium" ? setQuickAddOpen(true) : setPremiumGateOpen(true)} style={{ background: "#4F646F", border: "none", color: "#fff", borderRadius: "6px", padding: "6px 14px", fontSize: "11px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "5px" }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
               AI ADD
             </button>
@@ -2348,6 +2380,40 @@ export default function App() {
         </Modal>
       )}
 
+      {/* Premium Gate Modal */}
+      {premiumGateOpen && (
+        <Modal title="AI Quick Add" onClose={() => setPremiumGateOpen(false)}>
+          {aiInterestSubmitted ? (
+            <>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", lineHeight: 1.6, marginTop: 0 }}>
+                Thanks for your interest — we'll reach out when access becomes available.
+              </p>
+              <button onClick={() => setPremiumGateOpen(false)} style={{ width: "100%", background: "var(--input-bg)", border: "1px solid var(--border)", color: "var(--text-secondary)", borderRadius: "6px", padding: "10px", fontWeight: 600, fontSize: "13px", cursor: "pointer", marginTop: "8px" }}>
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", lineHeight: 1.6, marginTop: 0 }}>
+                AI Quick Add is a premium feature. Thank you for your interest — click below to let us know you'd like access.
+              </p>
+              <Textarea
+                label="What do you think this feature does, or why do you want access? (optional)"
+                value={premiumGateMsg}
+                onChange={v => setPremiumGateMsg(v)}
+              />
+              <button
+                onClick={submitInterest}
+                disabled={premiumGateSubmitting}
+                style={{ width: "100%", background: premiumGateSubmitting ? "var(--border)" : "#4F646F", color: "#fff", border: "none", borderRadius: "6px", padding: "10px", fontWeight: 700, fontSize: "13px", cursor: premiumGateSubmitting ? "not-allowed" : "pointer", marginTop: "8px" }}
+              >
+                {premiumGateSubmitting ? "Submitting..." : "I'm Interested"}
+              </button>
+            </>
+          )}
+        </Modal>
+      )}
+
       {/* Mobile Bottom Nav */}
       <div className="mobile-bottom-nav">
         {TABS.map(t => (
@@ -2373,7 +2439,7 @@ export default function App() {
             {t.label}
           </button>
         ))}
-        <button onClick={() => setQuickAddOpen(true)} style={{
+        <button onClick={() => userTier === "premium" ? setQuickAddOpen(true) : setPremiumGateOpen(true)} style={{
           flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           gap: "3px", background: "none", border: "none", borderTop: "2px solid #4F646F",
           cursor: "pointer", color: "#4F646F", padding: "8px 4px",
