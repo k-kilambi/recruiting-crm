@@ -18,35 +18,50 @@ const DIRECTIONS = ["Sent", "Received"];
 const OUTREACH_STATUSES = ["Sent", "Replied", "No Response", "Follow-up Needed"];
 
 const STATUS_COLORS = {
-  Interested: "#3b82f6",
-  Applied: "#8b5cf6",
-  Interviewing: "#f59e0b",
-  Offer: "#10b981",
-  Rejected: "#ef4444",
-  Withdrew: "#71717a",
-  Sent: "#3b82f6",
-  Replied: "#10b981",
-  "No Response": "#71717a",
-  "Follow-up Needed": "#ef4444",
-  Target: "#f59e0b",
-  Bridge: "#8b5cf6",
-  Resource: "#10b981",
+  Interested:         "#4D82C2",
+  Applied:            "#8E73C6",
+  Interviewing:       "#C2923A",
+  Offer:              "#3F9C74",
+  Rejected:           "#CC5C5C",
+  Withdrew:           "#8893A0",
+  Sent:               "#4D82C2",
+  Replied:            "#3F9C74",
+  "No Response":      "#8893A0",
+  "Follow-up Needed": "#CC5C5C",
+  Target:             "#C2923A",
+  Bridge:             "#8E73C6",
+  Resource:           "#3F9C74",
+};
+const STATUS_TINTS = {
+  Interested:         "#E7F0FA",
+  Applied:            "#EFEAF9",
+  Interviewing:       "#F7EEDD",
+  Offer:              "#E3F2EA",
+  Rejected:           "#FAE9E9",
+  Withdrew:           "#EEF1F4",
+  Sent:               "#E7F0FA",
+  Replied:            "#E3F2EA",
+  "No Response":      "#EEF1F4",
+  "Follow-up Needed": "#FAE9E9",
+  Target:             "#F7EEDD",
+  Bridge:             "#EFEAF9",
+  Resource:           "#E3F2EA",
 };
 
 
 // ─── SMALL UI COMPONENTS ──────────────────────────────────────────────────────
-const Badge = ({ label, color }) => (
+const Badge = ({ label, color, tint }) => (
   <span style={{
     display: "inline-block",
-    padding: "2px 8px",
-    borderRadius: "4px",
+    padding: "2px 9px",
+    borderRadius: "999px",
     fontSize: "11px",
     fontWeight: 600,
     letterSpacing: "0.04em",
     textTransform: "uppercase",
-    background: (color || STATUS_COLORS[label] || "var(--text-secondary)") + "22",
-    color: color || STATUS_COLORS[label] || "#9ca3af",
-    border: `1px solid ${(color || STATUS_COLORS[label] || "var(--text-secondary)")}44`,
+    background: tint || STATUS_TINTS[label] || "#EEF1F4",
+    color: color || STATUS_COLORS[label] || "#8893A0",
+    border: `1.5px solid ${(color || STATUS_COLORS[label] || "#8893A0")}40`,
   }}>{label}</span>
 );
 
@@ -960,8 +975,10 @@ const emptyMiniContact = () => ({ id: genId(), name: "", companyId: "", title: "
 const emptyActionItem = (outreachId = null, contactId = null) => ({ id: genId(), outreachId, contactId, description: "", priority: "M", effort: "M", done: false, backlog: false, dueDate: "" });
 const PRIORITIES = ["L", "M", "H"];
 const EFFORTS = ["L", "M", "H"];
-const PRIORITY_COLORS = { L: "#71717a", M: "#f59e0b", H: "#ef4444" };
-const EFFORT_COLORS = { L: "#10b981", M: "#f59e0b", H: "#ef4444" };
+const PRIORITY_COLORS = { L: "#8893A0", M: "#C2923A", H: "#CC5C5C" };
+const EFFORT_COLORS  = { L: "#3F9C74", M: "#C2923A", H: "#CC5C5C" };
+const PRIORITY_TINTS = { L: "#EEF1F4", M: "#F7EEDD", H: "#FAE9E9" };
+const EFFORT_TINTS   = { L: "#E3F2EA", M: "#F7EEDD", H: "#FAE9E9" };
 
 const OutreachTab = ({ data, setData, dbSave, dbDelete, setOutreach, setContacts, setCompanies, setJobs, setActionItems, onError, userId }) => {
   const [modal, setModal] = useState(null);
@@ -1398,36 +1415,23 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
   const [showNoResponse, setShowNoResponse] = useState(false);
 
   // ── Derived data ─────────────────────────────────────────────────────────────
-  const allOpenActions = (data.actionItems || []).filter(a => !a.done && !a.backlog);
-  const backlogActions  = (data.actionItems || []).filter(a => !a.done && a.backlog);
+  const allOpenActions   = (data.actionItems || []).filter(a => !a.done && !a.backlog);
+  const backlogActions   = (data.actionItems || []).filter(a => !a.done && a.backlog);
   const followUpOutreach = data.outreach.filter(o => o.status === "Follow-up Needed");
   const noResponse       = data.outreach.filter(o => o.status === "No Response");
 
-  // ── Stat card values ─────────────────────────────────────────────────────────
-  const openActionsCount  = allOpenActions.length;
-  const followUpsDueCount = followUpOutreach.length;
-  const interviewingCount = data.jobs.filter(j => j.status === "Interviewing").length;
-  const appsSentCount     = data.jobs.filter(j => j.status === "Applied").length;
-
-  // ── Unified sorted list (action items + follow-up outreach) ──────────────────
-  const PRIORITY_ORDER = { H: 0, M: 1, L: 2 };
-  const EFFORT_ORDER   = { L: 0, M: 1, H: 2 };
-  const unifiedItems = [
-    ...allOpenActions.map(a => ({ _kind: "action", ...a })),
-    ...followUpOutreach.map(o => ({ _kind: "followup", ...o })),
-  ].sort((a, b) => {
-    const pa = PRIORITY_ORDER[a.priority] ?? 3;
-    const pb = PRIORITY_ORDER[b.priority] ?? 3;
-    if (pa !== pb) return pa - pb;
-    const ea = EFFORT_ORDER[a.effort] ?? 3;
-    const eb = EFFORT_ORDER[b.effort] ?? 3;
-    return ea - eb;
+  // ── Sort action items by priority then effort ─────────────────────────────────
+  const PO = { H: 0, M: 1, L: 2 }, EO = { L: 0, M: 1, H: 2 };
+  const sortedActions = [...allOpenActions].sort((a, b) => {
+    const pd = (PO[a.priority] ?? 3) - (PO[b.priority] ?? 3);
+    return pd !== 0 ? pd : (EO[a.effort] ?? 3) - (EO[b.effort] ?? 3);
   });
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
-  const ctName = id => data.contacts.find(c => c.id === id)?.name || "—";
-  const outreachSummary = id => data.outreach.find(o => o.id === id)?.summary || "—";
-  const outreachContact = id => { const o = data.outreach.find(o => o.id === id); return o ? ctName(o.contactId) : "—"; };
+  const getContact   = id => data.contacts.find(c => c.id === id) || null;
+  const getCompany   = id => data.companies.find(c => c.id === id) || null;
+  const ctName       = id => getContact(id)?.name || "—";
+  const getInitials  = name => name ? name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() : "?";
 
   const markDone = async id => {
     await supabase.from("action_items").update({ done: true }).eq("id", id);
@@ -1442,126 +1446,180 @@ const DashboardTab = ({ data, setData, onEditOutreach, onEditJob }) => {
     setData(d => ({ ...d, actionItems: d.actionItems.map(x => x.id === id ? { ...x, backlog: false } : x) }));
   };
 
-  const StatCard = ({ label, value, color }) => (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 14px", flex: 1, minWidth: "90px" }}>
-      <div style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>{label}</div>
-      <div style={{ fontSize: "22px", fontWeight: 700, color: color || "var(--text-primary)", fontFamily: "'DM Mono', monospace" }}>{value}</div>
+  // ── Design tokens ─────────────────────────────────────────────────────────────
+  const FONT   = "'Hanken Grotesk', 'DM Sans', sans-serif";
+  const INK    = "#20262C";
+  const MUTED  = "#8893A0";
+  const CARD   = "#EFF3F7";
+  const HAIR   = "#E4E9EF";
+  const SHADOW = "0 2px 10px rgba(45,60,80,.05)";
+
+  // ── Stat cards config ─────────────────────────────────────────────────────────
+  const openActionsCount  = allOpenActions.length;
+  const followUpsDueCount = followUpOutreach.length;
+  const interviewingCount = data.jobs.filter(j => j.status === "Interviewing").length;
+  const appsSentCount     = data.jobs.filter(j => j.status === "Applied").length;
+  const statCards = [
+    { label: "Open Actions",  value: openActionsCount,  color: openActionsCount  > 0 ? "#CC5C5C" : "#AEB6BF" },
+    { label: "Follow-ups Due", value: followUpsDueCount, color: followUpsDueCount > 0 ? "#C2923A" : "#AEB6BF" },
+    { label: "Interviewing",  value: interviewingCount, color: interviewingCount > 0 ? STATUS_COLORS.Interviewing : "#AEB6BF" },
+    { label: "Apps Sent",     value: appsSentCount,     color: appsSentCount     > 0 ? INK        : "#AEB6BF" },
+  ];
+
+  const SectionHead = ({ title, count, countColor = MUTED, countBg = "#EEF1F4" }) => (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+      <span style={{ fontSize: "13px", fontWeight: 700, color: INK, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: FONT }}>{title}</span>
+      <span style={{ fontSize: "11px", fontWeight: 600, color: countColor, background: countBg, borderRadius: "999px", padding: "1px 8px" }}>{count}</span>
     </div>
   );
 
   return (
-    <div>
-      <div style={{ fontSize: "11px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Dashboard</div>
-      <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "24px" }}>Overview</div>
+    <div style={{ fontFamily: FONT, color: INK, maxWidth: "800px", margin: "0 auto" }}>
+      <div style={{ fontSize: "27px", fontWeight: 700, color: INK, marginBottom: "24px", lineHeight: 1.15 }}>Overview</div>
 
       {/* ── Stat cards ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
-        <StatCard label="Open Actions"  value={openActionsCount}  color={openActionsCount  > 0 ? "#ef4444" : "var(--text-primary)"} />
-        <StatCard label="Follow-ups Due" value={followUpsDueCount} color={followUpsDueCount > 0 ? "#f59e0b" : "var(--text-primary)"} />
-        <StatCard label="Interviewing"  value={interviewingCount} color={STATUS_COLORS.Interviewing} />
-        <StatCard label="Apps Sent"     value={appsSentCount} />
+      <div className="dash-stat-grid" style={{ marginBottom: "32px" }}>
+        {statCards.map(({ label, value, color }) => (
+          <div key={label} style={{ background: CARD, borderRadius: "18px", padding: "16px 18px", boxShadow: SHADOW }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, flexShrink: 0 }} />
+              <span style={{ fontSize: "11.5px", fontWeight: 600, color: MUTED, fontFamily: FONT }}>{label}</span>
+            </div>
+            <div style={{ fontSize: "30px", fontWeight: 700, color, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>{value}</div>
+          </div>
+        ))}
       </div>
 
-      {/* ── Unified Actions list ────────────────────────────────────────────────── */}
-      {unifiedItems.length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ fontSize: "12px", color: "var(--text-tertiary)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>Actions</div>
-          {unifiedItems.map(item => {
-            if (item._kind === "action") {
-              const a = item;
-              const contact = a.contactId ? data.contacts.find(c => c.id === a.contactId) : null;
-              const company = contact ? data.companies.find(co => co.id === contact.companyId) : null;
-              return (
-                <div key={a.id} className="dash-action-card" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "3px solid #3b82f6", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px" }}>
+      {/* ── Actions ──────────────────────────────────────────────────────────────── */}
+      {sortedActions.length > 0 && (
+        <div style={{ marginBottom: "32px" }}>
+          <SectionHead title="Actions" count={sortedActions.length} />
+          {sortedActions.map(a => {
+            const outreachObj     = a.outreachId ? data.outreach.find(o => o.id === a.outreachId) : null;
+            const displayContact  = outreachObj ? getContact(outreachObj.contactId) : a.contactId ? getContact(a.contactId) : null;
+            const displayCompany  = displayContact ? getCompany(displayContact.companyId) : null;
+            const initials        = getInitials(displayContact?.name || "");
+            const note            = outreachObj?.summary || null;
+            const isOutreach      = !!a.outreachId;
+            const pillBg          = isOutreach ? "#E7F0FA" : "#EFEAF9";
+            const pillColor       = isOutreach ? "#4D82C2" : "#8E73C6";
+
+            return (
+              <div key={a.id} style={{ background: CARD, borderRadius: "18px", padding: "16px 18px", marginBottom: "10px", boxShadow: SHADOW }}>
+                <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                  {/* Checkbox */}
                   <div onClick={() => markDone(a.id)}
-                    style={{ width: "26px", height: "26px", border: `2px solid ${a.done ? "#10b981" : "#94a3b8"}`, borderRadius: "5px", background: a.done ? "#10b981" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {a.done && <span style={{ color: "white", fontSize: "15px", lineHeight: 1 }}>✓</span>}
+                    style={{ width: "22px", height: "22px", minWidth: "22px", border: `2px solid #4D82C2`, borderRadius: "8px", background: a.done ? "#4D82C2" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "2px", flexShrink: 0 }}>
+                    {a.done && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><polyline points="2,5.5 4.5,8 9,3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                   </div>
-                  <div style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: a.done ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
-                  <div className="dash-action-meta">
-                    {a.outreachId && (
-                      <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                        <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>outreach </span>
-                        <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }}
-                          style={{ background: "none", border: "none", color: "#3b82f6", fontSize: "13px", cursor: "pointer", padding: 0 }}>
-                          {outreachContact(a.outreachId)} · {outreachSummary(a.outreachId)} ↗
-                        </button>
+                  {/* Body */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "15px", fontWeight: 600, color: a.done ? MUTED : INK, lineHeight: 1.35, marginBottom: "10px", textDecoration: a.done ? "line-through" : "none" }}>{a.description}</div>
+                    {/* Chips row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap", marginBottom: note ? "10px" : 0 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: pillBg, color: pillColor, borderRadius: "999px", padding: "3px 10px", fontSize: "11.5px", fontWeight: 600 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: pillColor, flexShrink: 0 }} />
+                        {isOutreach ? "Outreach" : "Contact"}
                       </span>
+                      {displayContact && (
+                        <>
+                          <span style={{ width: "20px", height: "20px", minWidth: "20px", borderRadius: "50%", background: "#4D82C2", color: "#fff", fontSize: "9px", fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{initials}</span>
+                          <span style={{ fontSize: "11.5px", fontWeight: 600, color: MUTED }}>{displayContact.name}{displayCompany ? ` · ${displayCompany.name}` : ""}</span>
+                        </>
+                      )}
+                    </div>
+                    {/* Note bubble */}
+                    {note && (
+                      <div style={{ background: "#FFFFFF", borderRadius: "13px", padding: "9px 13px", fontSize: "13px", color: MUTED, lineHeight: 1.5 }}>
+                        {a.outreachId
+                          ? <button onClick={() => { const o = data.outreach.find(o => o.id === a.outreachId); if (o) onEditOutreach(o); }} style={{ background: "none", border: "none", color: MUTED, fontSize: "13px", cursor: "pointer", padding: 0, textAlign: "left", lineHeight: 1.5, fontFamily: FONT }}>{note} <span style={{ color: "#4D82C2" }}>↗</span></button>
+                          : note}
+                      </div>
                     )}
-                    {a.contactId && !a.outreachId && contact && (
-                      <span style={{ whiteSpace: "nowrap", fontSize: "13px", color: "var(--text-secondary)" }}>
-                        {contact.name}{company ? ` · ${company.name}` : ""}
-                      </span>
-                    )}
-                    <button onClick={() => moveToBacklog(a.id)} className="btn-click"
-                      style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "4px 10px", fontSize: "13px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}>
-                      ⏸ Backlog
-                    </button>
                   </div>
+                  {/* Backlog button */}
+                  <button onClick={() => moveToBacklog(a.id)} title="Move to backlog"
+                    style={{ background: "transparent", border: `1px solid ${HAIR}`, color: MUTED, borderRadius: "10px", padding: "5px 9px", fontSize: "14px", cursor: "pointer", flexShrink: 0, lineHeight: 1 }}>⏸</button>
                 </div>
-              );
-            } else {
-              const o = item;
-              return (
-                <div key={o.id} onClick={() => onEditOutreach(o)} className="dash-action-card"
-                  style={{ background: "var(--surface)", border: "1px solid var(--border)", borderLeft: "3px solid #f59e0b", borderRadius: "8px", padding: "14px 16px", marginBottom: "8px", cursor: "pointer" }}>
-                  <div style={{ flex: 1, fontSize: "14px", fontWeight: 500, color: "var(--text-primary)" }}>Follow up re: {o.summary}</div>
-                  <div className="dash-action-meta">
-                    <span style={{ whiteSpace: "nowrap", fontSize: "13px", color: "var(--text-secondary)" }}>{ctName(o.contactId)}</span>
-                    <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-                      <span style={{ fontSize: "10px", color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em" }}>date </span>
-                      <span style={{ color: "var(--text-secondary)" }}>{o.date}</span>
-                    </span>
-                    <span style={{ color: "#3b82f6", fontSize: "13px", whiteSpace: "nowrap" }}>edit ↗</span>
-                  </div>
-                </div>
-              );
-            }
+              </div>
+            );
           })}
         </div>
       )}
 
-      {/* ── Backlog (collapsed) ─────────────────────────────────────────────────── */}
-      {backlogActions.length > 0 && (
-        <div style={{ marginBottom: "24px" }}>
-          <button onClick={() => setShowBacklog(s => !s)} style={{ background: "transparent", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
-            <span style={{ fontSize: "14px" }}>{showBacklog ? "▾" : "▸"}</span>
-            BACKLOG <span style={{ fontSize: "10px", color: "var(--text-tertiary)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>{backlogActions.length}</span>
-          </button>
-          {showBacklog && backlogActions.map(a => (
-            <div key={a.id} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.6 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>{a.description}</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>re: {data.contacts.find(c => c.id === (data.outreach.find(o => o.id === a.outreachId)?.contactId))?.name || "—"}</div>
+      {/* ── Follow-ups ───────────────────────────────────────────────────────────── */}
+      {followUpOutreach.length > 0 && (
+        <div style={{ marginBottom: "32px" }}>
+          <SectionHead title="Follow-ups" count={followUpOutreach.length} countColor="#C2923A" countBg="#F7EEDD" />
+          {followUpOutreach.map(o => {
+            const contact = getContact(o.contactId);
+            return (
+              <div key={o.id} onClick={() => onEditOutreach(o)}
+                style={{ background: CARD, borderRadius: "18px", padding: "16px 18px", marginBottom: "10px", cursor: "pointer", boxShadow: SHADOW, display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{ width: "36px", height: "36px", minWidth: "36px", borderRadius: "10px", background: "#F7EEDD", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C2923A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "15px", fontWeight: 600, color: INK, lineHeight: 1.35 }}>{o.summary}</div>
+                  <div style={{ fontSize: "11.5px", fontWeight: 600, color: MUTED, marginTop: "3px" }}>{contact?.name || "—"} · {o.date}</div>
+                </div>
+                <span style={{ color: "#4D82C2", fontSize: "16px", fontWeight: 600, flexShrink: 0 }}>↗</span>
               </div>
-              <button onClick={() => restoreFromBacklog(a.id)}
-                style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: 600, flexShrink: 0 }}>restore</button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* ── No Response (collapsed) ─────────────────────────────────────────────── */}
-      {noResponse.length > 0 && (
-        <div>
-          <button onClick={() => setShowNoResponse(s => !s)} style={{ background: "transparent", border: "none", color: "var(--text-tertiary)", cursor: "pointer", fontSize: "12px", fontWeight: 600, padding: 0, letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
-            <span style={{ fontSize: "14px" }}>{showNoResponse ? "▾" : "▸"}</span>
-            NO RESPONSE <span style={{ fontSize: "10px", color: "var(--text-tertiary)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>{noResponse.length}</span>
-          </button>
-          {showNoResponse && noResponse.map(o => (
-            <div key={o.id} onClick={() => onEditOutreach(o)} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "12px 16px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text-tertiary)"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
-              <div>
-                <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>{ctName(o.contactId)}</div>
-                <div style={{ color: "var(--text-tertiary)", fontSize: "11px", marginTop: "2px" }}>{o.summary} · {o.date}</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Badge label="No Response" />
-                <span style={{ color: "#3b82f6", fontSize: "11px" }}>edit ↗</span>
-              </div>
+      {/* ── Backlog (collapsible fold row) ───────────────────────────────────────── */}
+      {backlogActions.length > 0 && (
+        <div style={{ marginBottom: "10px" }}>
+          <button onClick={() => setShowBacklog(s => !s)}
+            style={{ width: "100%", background: CARD, border: "none", borderRadius: "16px", padding: "14px 18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: FONT }}>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: INK, letterSpacing: "0.04em", textTransform: "uppercase" }}>Backlog</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: MUTED, background: "#EEF1F4", borderRadius: "999px", padding: "2px 9px" }}>{backlogActions.length}</span>
+              <span style={{ color: MUTED, fontSize: "12px" }}>{showBacklog ? "▾" : "▸"}</span>
             </div>
-          ))}
+          </button>
+          {showBacklog && (
+            <div style={{ marginTop: "6px" }}>
+              {backlogActions.map(a => (
+                <div key={a.id} style={{ background: CARD, borderRadius: "14px", padding: "12px 18px", marginBottom: "6px", display: "flex", alignItems: "center", gap: "12px", opacity: 0.65 }}>
+                  <div style={{ flex: 1, fontSize: "13px", color: MUTED, lineHeight: 1.4 }}>{a.description}</div>
+                  <button onClick={() => restoreFromBacklog(a.id)}
+                    style={{ background: "transparent", border: `1px solid ${HAIR}`, color: MUTED, borderRadius: "10px", padding: "4px 10px", fontSize: "11px", cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap", fontFamily: FONT }}>restore</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── No Response (collapsible fold row) ───────────────────────────────────── */}
+      {noResponse.length > 0 && (
+        <div style={{ marginBottom: "10px" }}>
+          <button onClick={() => setShowNoResponse(s => !s)}
+            style={{ width: "100%", background: CARD, border: "none", borderRadius: "16px", padding: "14px 18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: FONT }}>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: INK, letterSpacing: "0.04em", textTransform: "uppercase" }}>No Response</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: MUTED, background: "#EEF1F4", borderRadius: "999px", padding: "2px 9px" }}>{noResponse.length}</span>
+              <span style={{ color: MUTED, fontSize: "12px" }}>{showNoResponse ? "▾" : "▸"}</span>
+            </div>
+          </button>
+          {showNoResponse && (
+            <div style={{ marginTop: "6px" }}>
+              {noResponse.map(o => (
+                <div key={o.id} onClick={() => onEditOutreach(o)}
+                  style={{ background: CARD, borderRadius: "14px", padding: "12px 18px", marginBottom: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: MUTED }}>{ctName(o.contactId)}</div>
+                    <div style={{ fontSize: "11px", color: MUTED, marginTop: "2px" }}>{o.summary} · {o.date}</div>
+                  </div>
+                  <span style={{ color: "#4D82C2", fontSize: "14px" }}>↗</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1763,6 +1821,7 @@ export default function App() {
   const [tab, setTab] = useState("dashboard");
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showHeaderOverflow, setShowHeaderOverflow] = useState(false);
   const [importVal, setImportVal] = useState("");
   const [dashOutreachModal, setDashOutreachModal] = useState(null);
   const [dashJobModal, setDashJobModal] = useState(null);
@@ -2135,38 +2194,59 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
       {/* Header + Nav */}
-      <div style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", padding: "0 28px", display: "flex", alignItems: "stretch", justifyContent: "space-between", height: "56px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "28px", height: "28px", background: "#4F646F", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontSize: "14px", fontWeight: 800 }}>R</span>
+      <div style={{ background: "#FFFFFF", borderBottom: "1px solid #E4E9EF", padding: "0 20px", display: "flex", alignItems: "stretch", justifyContent: "space-between", height: "56px", position: "sticky", top: 0, zIndex: 80 }}>
+        {/* Wordmark */}
+        <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+          <div style={{ width: "26px", height: "26px", background: "#4F646F", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ color: "#fff", fontSize: "13px", fontWeight: 800 }}>R</span>
           </div>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", letterSpacing: "0.02em" }}>recruiting.crm</span>
-          <span className="header-version" style={{ fontSize: "10px", color: "var(--border)", background: "var(--input-bg)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 6px", fontFamily: "'DM Mono', monospace" }}>v0.2 — stage 2</span>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontWeight: 600, fontSize: "13px", color: "#20262C", letterSpacing: "0.02em" }}>recruiting.crm</span>
         </div>
+        {/* Desktop tab nav */}
         <div className="desktop-nav" style={{ alignItems: "stretch", gap: 0 }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
-              background: "none",
-              border: "none", cursor: "pointer",
-              padding: "0 18px", fontSize: "12px", fontWeight: 600,
-              color: tab === t.id ? t.color : "var(--text-tertiary)",
+              background: "none", border: "none", cursor: "pointer",
+              padding: "0 16px", fontSize: "12px", fontWeight: 600,
+              color: tab === t.id ? t.color : "#8893A0",
               borderBottom: `2px solid ${tab === t.id ? t.color : "transparent"}`,
               letterSpacing: "0.04em", textTransform: "uppercase",
-              transition: "color 0.15s",
-              display: "flex", alignItems: "center",
+              transition: "color 0.15s", display: "flex", alignItems: "center",
             }}>{t.label}</button>
           ))}
         </div>
+        {/* Right: + Add + overflow */}
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <div className="header-data-btns">
-            <button onClick={() => userTier === "premium" ? setQuickAddOpen(true) : setPremiumGateOpen(true)} style={{ background: "#4F646F", border: "none", color: "#fff", borderRadius: "6px", padding: "6px 14px", fontSize: "11px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "5px" }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              AI ADD
+          <button onClick={() => userTier === "premium" ? setQuickAddOpen(true) : setPremiumGateOpen(true)} className="btn-click"
+            style={{ background: "#4D82C2", border: "none", color: "#fff", borderRadius: "999px", padding: "7px 18px", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", letterSpacing: "0.01em" }}>
+            <span style={{ fontSize: "17px", lineHeight: 1, marginTop: "-1px", fontWeight: 400 }}>+</span> Add
+          </button>
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setShowHeaderOverflow(s => !s)}
+              style={{ background: "transparent", border: "1px solid #E4E9EF", color: "#8893A0", borderRadius: "8px", padding: "6px 11px", fontSize: "18px", lineHeight: "18px", cursor: "pointer", display: "flex", alignItems: "center", letterSpacing: "0.05em" }}>
+              ···
             </button>
-            <button onClick={() => setShowImport(true)} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>IMPORT</button>
-            <button onClick={exportData} style={{ background: "transparent", border: "1px solid #4F646F55", color: "#4F646F", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>EXPORT JSON</button>
+            {showHeaderOverflow && (
+              <>
+                <div style={{ position: "fixed", inset: 0, zIndex: 90 }} onClick={() => setShowHeaderOverflow(false)} />
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#FFFFFF", border: "1px solid #E4E9EF", borderRadius: "12px", boxShadow: "0 4px 20px rgba(45,60,80,.12)", padding: "6px", zIndex: 91, minWidth: "168px" }}>
+                  {[
+                    { label: "Import JSON",  icon: "↑", action: () => { setShowImport(true);  setShowHeaderOverflow(false); } },
+                    { label: "Export JSON",  icon: "↓", action: () => { exportData();           setShowHeaderOverflow(false); } },
+                    { label: "Sign out",     icon: "→", action: () => { supabase.auth.signOut(); setShowHeaderOverflow(false); } },
+                  ].map(item => (
+                    <button key={item.label} onClick={item.action}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", background: "transparent", border: "none", padding: "9px 12px", fontSize: "13px", fontWeight: 600, color: "#20262C", cursor: "pointer", borderRadius: "8px", textAlign: "left", fontFamily: "'DM Sans', sans-serif" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#EFF3F7"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ color: "#8893A0", fontSize: "14px", width: "16px", textAlign: "center" }}>{item.icon}</span>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-          <button onClick={() => supabase.auth.signOut()} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text-tertiary)", borderRadius: "6px", padding: "6px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.04em" }}>SIGN OUT</button>
         </div>
       </div>
 

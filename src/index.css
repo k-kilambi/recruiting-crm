@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
 :root {
-  --bg:             #F4FAFF;
+  --bg:             #FFFFFF;
   --surface:        #EBF2F2;
   --surface-raised: #DEE7E7;
   --border:         #C8D6D6;
@@ -67,6 +69,16 @@ tbody tr:hover {
     padding-left: 40px;
     flex-shrink: unset;
   }
+}
+
+/* ── Dashboard stat grid ─────────────────────────────────────────────────── */
+.dash-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .dash-stat-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 /* ── Landing page ────────────────────────────────────────────────────────── */
